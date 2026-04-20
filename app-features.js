@@ -764,6 +764,8 @@ var _editingPresetId = null;
 function resetPresetForm() {
     _editingPresetId = null;
     document.getElementById('fldPresetName').value = '';
+    document.getElementById('fldPresetShippingAddress').value = '';
+    document.getElementById('fldPresetReturnAddress').value = '';
     document.getElementById('fldPresetTemplateCode').value = '';
     document.getElementById('fldPresetMethod').value = '택배, 소포, 등기';
     document.getElementById('fldPresetFeeType').value = '유료';
@@ -812,6 +814,8 @@ function populatePresetForm(presetId) {
 
     _editingPresetId = p.id;
     document.getElementById('fldPresetName').value = p.name || '';
+    document.getElementById('fldPresetShippingAddress').value = p.shippingAddressId || '';
+    document.getElementById('fldPresetReturnAddress').value = p.returnAddressId || '';
     document.getElementById('fldPresetTemplateCode').value = p.templateCode || '';
     document.getElementById('fldPresetMethod').value = p.method || '택배, 소포, 등기';
     document.getElementById('fldPresetFeeType').value = p.feeType || '유료';
@@ -1061,7 +1065,9 @@ function savePreset() {
         section3Fee: document.getElementById('fldPresetSection3Fee').value.trim(),
         addFee: document.getElementById('fldPresetAddFee').value.trim(),
         returnFee: parseInt(document.getElementById('fldPresetReturnFee').value) || 0,
-        exchangeFee: parseInt(document.getElementById('fldPresetExchangeFee').value) || 0
+        exchangeFee: parseInt(document.getElementById('fldPresetExchangeFee').value) || 0,
+        shippingAddressId: document.getElementById('fldPresetShippingAddress').value,
+        returnAddressId: document.getElementById('fldPresetReturnAddress').value
     };
 
     // Fee Type Constraints
@@ -1213,7 +1219,7 @@ function deleteAddress(id) {
 
 function populateAddressDropdowns() {
     var addresses = Storage.getAddresses();
-    ['fldShippingAddress', 'fldReturnAddress'].forEach(function (selId) {
+    ['fldShippingAddress', 'fldReturnAddress', 'fldPresetShippingAddress', 'fldPresetReturnAddress'].forEach(function (selId) {
         var sel = document.getElementById(selId);
         if (!sel) return;
         sel.innerHTML = '<option value="">주소 선택</option>';
@@ -1224,8 +1230,24 @@ function populateAddressDropdowns() {
 }
 
 // ════════════════════════════════════════
-// PRESET SUMMARY CARD (Step 5)
+// PRESET SUMMARY CARD & ADDRESS MAPPING (Step 2)
 // ════════════════════════════════════════
+function applyPresetAddresses(presetId) {
+    if (!presetId) return;
+    var presets = Storage.getShippingPresets();
+    var sp = presets.find(function(p) { return p.id === presetId; });
+    if (!sp) return;
+    
+    if (sp.shippingAddressId) {
+        var shipSel = document.getElementById('fldShippingAddress');
+        if (shipSel) shipSel.value = sp.shippingAddressId;
+    }
+    if (sp.returnAddressId) {
+        var retSel = document.getElementById('fldReturnAddress');
+        if (retSel) retSel.value = sp.returnAddressId;
+    }
+}
+
 function renderPresetSummary(presetId) {
     var wrap = document.getElementById('presetSummaryWrap');
     var card = document.getElementById('presetSummaryCard');

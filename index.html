@@ -248,7 +248,7 @@
                             <div class="form-grid">
                                 <div class="fg fg-full">
                                     <label>배송 프리셋 <span class="required">*</span></label>
-                                    <select id="fldShippingPreset" onchange="if(typeof renderPresetSummary === 'function') renderPresetSummary(this.value)">
+                                    <select id="fldShippingPreset" onchange="if(typeof renderPresetSummary === 'function') { renderPresetSummary(this.value); } if(typeof applyPresetAddresses === 'function') { applyPresetAddresses(this.value); }">
                                         <option value="">프리셋 선택</option>
                                     </select>
                                     <span class="form-help" style="margin-top:2px;font-size:10px;color:var(--gray-400);">프리셋 관리 메뉴에서 배송 설정을 등록하세요.</span>
@@ -689,6 +689,14 @@
                             <div class="fg">
                                 <label>프리셋명 <span class="required">*</span></label>
                                 <input type="text" id="fldPresetName" placeholder="예: 기본 배송 (프로그램 내부용)">
+                            </div>
+                            <div class="fg">
+                                <label>기본 출고지</label>
+                                <select id="fldPresetShippingAddress"><option value="">지정 불가 (주소 등록 전)</option></select>
+                            </div>
+                            <div class="fg">
+                                <label>기본 반품/교환지</label>
+                                <select id="fldPresetReturnAddress"><option value="">지정 불가 (주소 등록 전)</option></select>
                             </div>
                             <input type="hidden" id="fldPresetTemplateCode" value="">
                             <div class="fg">
