@@ -1524,6 +1524,32 @@ function initFooterImages() {
         e.target.value = '';
     });
     
+    function bindDrop(gridId, type) {
+        var grid = document.getElementById(gridId);
+        if (!grid) return;
+        grid.addEventListener('dragover', function(e) { 
+            e.preventDefault(); 
+            e.stopPropagation(); 
+            grid.style.background = 'var(--surface-container-high)'; 
+        });
+        grid.addEventListener('dragleave', function(e) { 
+            e.preventDefault(); 
+            e.stopPropagation(); 
+            grid.style.background = ''; 
+        });
+        grid.addEventListener('drop', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            grid.style.background = '';
+            if (e.dataTransfer && e.dataTransfer.files) {
+                handleFooterImageUpload(e.dataTransfer.files, type);
+            }
+        });
+    }
+    
+    bindDrop('noticeLibGrid', 'notice');
+    bindDrop('consentLibGrid', 'consent');
+    
     renderFooterGalleries();
     renderFooterImagePreviews();
 }
