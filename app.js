@@ -209,11 +209,11 @@ function initSidebar() {
 function initWizard() {
     document.getElementById('btnNext1').addEventListener('click', function() { if (validateStep(1)) { collectStepData(1); goToStep(2); } });
     document.getElementById('btnPrev2').addEventListener('click', function() { collectStepData(2); goToStep(1); });
-    document.getElementById('btnNext2').addEventListener('click', function() { collectStepData(2); goToStep(3); });
-    document.getElementById('btnPrev3').addEventListener('click', function() { goToStep(2); });
-    document.getElementById('btnNext3').addEventListener('click', function() { goToStep(4); });
+    document.getElementById('btnNext2').addEventListener('click', function() { if (validateStep(2)) { collectStepData(2); goToStep(3); } });
+    document.getElementById('btnPrev3').addEventListener('click', function() { collectStepData(3); goToStep(2); });
+    document.getElementById('btnNext3').addEventListener('click', function() { collectStepData(3); goToStep(4); });
     document.getElementById('btnPrev4').addEventListener('click', function() { goToStep(3); });
-    document.getElementById('btnNext4').addEventListener('click', function() { collectStepData(4); goToStep(5); });
+    document.getElementById('btnNext4').addEventListener('click', function() { goToStep(5); });
     document.getElementById('btnPrev5').addEventListener('click', function() { goToStep(4); });
     document.getElementById('btnNext5').addEventListener('click', function() { collectStepData(5); goToStep(6); renderPreview(); });
     document.getElementById('btnPrev6').addEventListener('click', function() { goToStep(5); });
@@ -318,10 +318,14 @@ function initStep1Extras() {
     // Margin calculator
     var saleInput = document.getElementById('fldSalePrice');
     var buyInput = document.getElementById('fldBuyPrice');
+    var saleShipInput = document.getElementById('fldSaleShippingFee');
+    var buyShipInput = document.getElementById('fldBuyShippingFee');
     if (saleInput && buyInput) {
         saleInput.addEventListener('input', updateMarginDisplay);
         buyInput.addEventListener('input', updateMarginDisplay);
     }
+    if (saleShipInput) saleShipInput.addEventListener('input', updateMarginDisplay);
+    if (buyShipInput) buyShipInput.addEventListener('input', updateMarginDisplay);
 
     // Stock field color change
     var stockInput = document.getElementById('fldStock');
@@ -335,6 +339,8 @@ function initStep1Extras() {
 function updateMarginDisplay() {
     var salePrice = parseInt(document.getElementById('fldSalePrice').value) || 0;
     var buyPrice = parseInt(document.getElementById('fldBuyPrice').value) || 0;
+    var saleShip = parseInt(document.getElementById('fldSaleShippingFee').value) || 0;
+    var buyShip = parseInt(document.getElementById('fldBuyShippingFee').value) || 0;
     var wrap = document.getElementById('marginDisplayWrap');
     var amountEl = document.getElementById('marginAmount');
     var rateEl = document.getElementById('marginRate');
@@ -342,8 +348,10 @@ function updateMarginDisplay() {
     if (salePrice > 0 && buyPrice > 0) {
         wrap.style.display = 'block';
         var vatType = document.getElementById('fldVat').value;
-        var netSale = (vatType === '과세상품') ? Math.round(salePrice / 1.1) : salePrice;
-        var margin = netSale - buyPrice;
+        var totalSale = salePrice + saleShip;
+        var totalBuy = buyPrice + buyShip;
+        var netSale = (vatType === '과세상품') ? Math.round(totalSale / 1.1) : totalSale;
+        var margin = netSale - totalBuy;
         var marginRate = ((margin / netSale) * 100).toFixed(1);
         amountEl.textContent = formatCurrency(margin) + '원';
         amountEl.style.color = margin >= 0 ? 'var(--primary)' : 'var(--danger)';
@@ -361,9 +369,10 @@ function validateStep(step) {
     if (step === 1) {
         var catId = document.getElementById('fldCategoryId').value;
         var name = document.getElementById('fldProductName').value.trim();
-        var price = parseInt(document.getElementById('fldSalePrice').value);
         if (!catId) { showToast('카테고리를 선택해주세요.', 'warning'); return false; }
         if (!name) { showToast('상품명을 입력해주세요.', 'warning'); return false; }
+    } else if (step === 2) {
+        var price = parseInt(document.getElementById('fldSalePrice').value);
         if (!price || price <= 0) { showToast('판매가를 입력해주세요.', 'warning'); return false; }
     }
     return true;
@@ -380,20 +389,28 @@ function collectStepData(step) {
         currentProduct.productStatus = document.getElementById('fldStatus').value;
         currentProduct.internalName = document.getElementById('fldInternalName').value.trim();
         currentProduct.productName = document.getElementById('fldProductName').value.trim();
+        currentProduct.totalVolume = document.getElementById('fldTotalVolume').value;
+    } else if (step === 2) {
         currentProduct.salePrice = parseInt(document.getElementById('fldSalePrice').value) || 0;
         currentProduct.buyPrice = parseInt(document.getElementById('fldBuyPrice').value) || 0;
+        currentProduct.saleShippingFee = parseInt(document.getElementById('fldSaleShippingFee').value) || 0;
+        currentProduct.buyShippingFee = parseInt(document.getElementById('fldBuyShippingFee').value) || 0;
         currentProduct.stock = parseInt(document.getElementById('fldStock').value) || 0;
         currentProduct.vat = document.getElementById('fldVat').value;
         currentProduct.minorPurchase = document.getElementById('fldMinorPurchase').value;
-        currentProduct.totalVolume = document.getElementById('fldTotalVolume').value;
-    } else if (step === 2) {
+        currentProduct.shippingPresetId = document.getElementById('fldShippingPreset').value;
+        currentProduct.shippingAddressId = document.getElementById('fldShippingAddress').value;
+        currentProduct.returnAddressId = document.getElementById('fldReturnAddress').value;
+        currentProduct.asPhone = document.getElementById('fldAsPhone').value.trim();
+        currentProduct.asGuide = document.getElementById('fldAsGuide').value.trim();
+    } else if (step === 3) {
         var optData = collectOptionData();
         currentProduct.optionType = optData.optionType;
         currentProduct.optionNames = optData.optionNames;
         currentProduct.optionValues = optData.optionValues;
         currentProduct.combinations = optData.combinations;
         if (!optionEnabled) currentProduct.stock = optData.stock;
-    } else if (step === 4) {
+    } else if (step === 5) {
         currentProduct.brand = document.getElementById('fldBrand').value.trim();
         currentProduct.manufacturer = document.getElementById('fldManufacturer').value.trim();
         currentProduct.originCode = document.getElementById('fldOriginCode').value;
@@ -405,12 +422,6 @@ function collectStepData(step) {
         currentProduct.noticeModel = document.getElementById('fldNotice_model').value.trim();
         currentProduct.noticeCert = document.getElementById('fldNotice_cert').value.trim();
         currentProduct.noticeMaker = document.getElementById('fldNotice_maker').value.trim();
-    } else if (step === 5) {
-        currentProduct.shippingPresetId = document.getElementById('fldShippingPreset').value;
-        currentProduct.shippingAddressId = document.getElementById('fldShippingAddress').value;
-        currentProduct.returnAddressId = document.getElementById('fldReturnAddress').value;
-        currentProduct.asPhone = document.getElementById('fldAsPhone').value.trim();
-        currentProduct.asGuide = document.getElementById('fldAsGuide').value.trim();
     }
 }
 
@@ -432,6 +443,8 @@ function populateForm() {
     document.getElementById('fldProductName').value = currentProduct.productName || '';
     document.getElementById('fldSalePrice').value = currentProduct.salePrice || 0;
     document.getElementById('fldBuyPrice').value = currentProduct.buyPrice || 0;
+    document.getElementById('fldSaleShippingFee').value = currentProduct.saleShippingFee || 0;
+    document.getElementById('fldBuyShippingFee').value = currentProduct.buyShippingFee || 0;
     document.getElementById('fldStock').value = currentProduct.stock || '';
     if (currentProduct.stock && currentProduct.stock > 0) {
         document.getElementById('fldStock').style.color = 'var(--on-surface)';
@@ -485,7 +498,7 @@ function populateForm() {
     }
     if (currentProduct.totalVolume) document.getElementById('fldTotalVolume').value = currentProduct.totalVolume;
     renderImagePreviews();
-    // Step 5: Restore shipping preset & address selections
+    // Step 2: Restore shipping preset & address selections
     var presetSel = document.getElementById('fldShippingPreset');
     if (presetSel && currentProduct.shippingPresetId) {
         presetSel.value = currentProduct.shippingPresetId;

@@ -234,10 +234,10 @@ function removeDetailImage(idx) { currentImages.detail.splice(idx, 1); renderIma
 // SAVE / DRAFT
 // ════════════════════════════════════════
 function saveProduct() {
-    [1, 2, 4, 5].forEach(function(s) { collectStepData(s); });
+    [1, 2, 3, 5].forEach(function(s) { collectStepData(s); });
     if (!currentProduct.productName) { showToast('스토어 상품명을 입력하세요.', 'warning'); goToStep(1); return; }
     if (!currentProduct.categoryId) { showToast('카테고리를 선택하세요.', 'warning'); goToStep(1); return; }
-    if (!currentProduct.salePrice) { showToast('판매가를 입력하세요.', 'warning'); goToStep(1); return; }
+    if (!currentProduct.salePrice) { showToast('판매가를 입력하세요.', 'warning'); goToStep(2); return; }
 
     currentProduct.updatedAt = new Date().toISOString();
     currentProduct._images = currentImages;
@@ -255,7 +255,7 @@ function saveProduct() {
 }
 
 function saveDraft() {
-    [1, 2, 4, 5].forEach(function(s) { collectStepData(s); });
+    [1, 2, 3, 5].forEach(function(s) { collectStepData(s); });
     currentProduct.updatedAt = new Date().toISOString();
     currentProduct.isDraft = true;
     currentProduct._images = currentImages;

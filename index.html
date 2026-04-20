@@ -118,31 +118,31 @@
                         <div class="wizard-step active" data-step="1">
                             <div class="wizard-step-circle">1</div>
                             <div class="wizard-step-info">
-                                <span class="wizard-step-label">기본 정보</span>
+                                <span class="wizard-step-label">상품 기본</span>
                             </div>
                         </div>
                         <div class="wizard-step" data-step="2">
                             <div class="wizard-step-circle">2</div>
                             <div class="wizard-step-info">
-                                <span class="wizard-step-label">옵션</span>
+                                <span class="wizard-step-label">가격/배송</span>
                             </div>
                         </div>
                         <div class="wizard-step" data-step="3">
                             <div class="wizard-step-circle">3</div>
                             <div class="wizard-step-info">
-                                <span class="wizard-step-label">이미지</span>
+                                <span class="wizard-step-label">옵션</span>
                             </div>
                         </div>
                         <div class="wizard-step" data-step="4">
                             <div class="wizard-step-circle">4</div>
                             <div class="wizard-step-info">
-                                <span class="wizard-step-label">상품 상세</span>
+                                <span class="wizard-step-label">이미지</span>
                             </div>
                         </div>
                         <div class="wizard-step" data-step="5">
                             <div class="wizard-step-circle">5</div>
                             <div class="wizard-step-info">
-                                <span class="wizard-step-label">배송/A/S</span>
+                                <span class="wizard-step-label">상품 상세</span>
                             </div>
                         </div>
                         <div class="wizard-step" data-step="6">
@@ -154,10 +154,10 @@
                     </div>
 
                     <div class="wizard-body">
-                        <!-- Step 1: 기본 정보 -->
+                        <!-- Step 1: 상품 기본 -->
                         <div class="step-panel active" id="step1">
                             <div class="wizard-section-title">
-                                <i class='bx bx-cog'></i> 기본 정보
+                                <i class='bx bx-box'></i> 상품 기본
                             </div>
                             <div class="form-grid">
                                 <div class="fg">
@@ -230,29 +230,66 @@
                                         style="margin-top:2px;font-size:10px;color:var(--gray-400);">네이버 스마트스토어에 표시되는
                                         상품명 — 엑셀 다운로드에 사용</span>
                                 </div>
+                                
+                            </div>
+                            <div class="wizard-footer">
+                                <button class="btn-primary" id="btnNext1">다음 <i
+                                        class='bx bx-right-arrow-alt'></i></button>
+                                <div></div>
+                            </div>
+                        
+                        </div>
+
+                        <!-- Step 2: 가격 / 배송 -->
+                        <div class="step-panel" id="step2">
+                            <div class="wizard-section-title">
+                                <i class='bx bx-won'></i> 가격 / 배송
+                            </div>
+                            <div class="form-grid">
+                                <div class="fg fg-full">
+                                    <label>배송 프리셋 <span class="required">*</span></label>
+                                    <select id="fldShippingPreset" onchange="if(typeof renderPresetSummary === 'function') renderPresetSummary(this.value)">
+                                        <option value="">프리셋 선택</option>
+                                    </select>
+                                    <span class="form-help" style="margin-top:2px;font-size:10px;color:var(--gray-400);">프리셋 관리 메뉴에서 배송 설정을 등록하세요.</span>
+                                </div>
+                                <div class="fg fg-full" id="presetSummaryWrap" style="display:none;">
+                                    <div id="presetSummaryCard" style="padding:14px 16px;background:var(--surface-container);border-radius:10px;border:1px solid var(--surface-container-high);"></div>
+                                </div>
+                                <div class="fg">
+                                    <label>출고지</label>
+                                    <select id="fldShippingAddress"><option value="">주소 선택</option></select>
+                                </div>
+                                <div class="fg">
+                                    <label>반품/교환지</label>
+                                    <select id="fldReturnAddress"><option value="">주소 선택</option></select>
+                                </div>
+                                <div class="fg">
+                                    <label>판매 배송비 <span style="font-size:10px;color:var(--gray-400);font-weight:400;">(부가세 포함)</span></label>
+                                    <input type="number" id="fldSaleShippingFee" min="0" placeholder="0" value="0">
+                                </div>
+                                <div class="fg">
+                                    <label>매입 배송비 <span style="font-size:10px;color:var(--gray-400);font-weight:400;">(공급가 기준)</span></label>
+                                    <input type="number" id="fldBuyShippingFee" min="0" placeholder="0" value="0">
+                                </div>
                                 <div class="fg">
                                     <label style="display:flex;align-items:center;gap:6px;">
                                         판매가 <span class="required">*</span>
-                                        <label
-                                            style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:500;color:var(--gray-500);margin-left:auto;cursor:default;">
-                                            <input type="checkbox" id="fldVatIncluded" checked disabled
-                                                style="width:12px;height:12px;accent-color:var(--primary);cursor:default;">
+                                        <label style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:500;color:var(--gray-500);margin-left:auto;cursor:default;">
+                                            <input type="checkbox" id="fldVatIncluded" checked disabled style="width:12px;height:12px;accent-color:var(--primary);cursor:default;">
                                             부가세 포함
                                         </label>
                                     </label>
                                     <input type="number" id="fldSalePrice" min="0" placeholder="0">
                                 </div>
                                 <div class="fg">
-                                    <label>매입가 <span style="font-size:10px;color:var(--gray-400);font-weight:400;">(공급가
-                                            기준)</span></label>
+                                    <label>매입가 <span style="font-size:10px;color:var(--gray-400);font-weight:400;">(공급가 기준)</span></label>
                                     <input type="number" id="fldBuyPrice" min="0" placeholder="0">
                                 </div>
                                 <div class="fg fg-full" id="marginDisplayWrap" style="display:none;">
-                                    <div id="marginDisplay"
-                                        style="display:flex;gap:20px;padding:8px 14px;background:var(--surface-container-low);border-radius:8px;font-size:12px;align-items:center;">
+                                    <div id="marginDisplay" style="display:flex;gap:20px;padding:8px 14px;background:var(--surface-container-low);border-radius:8px;font-size:12px;align-items:center;">
                                         <span style="color:var(--gray-500);">💰 마진</span>
-                                        <span style="font-weight:700;color:var(--on-surface);"
-                                            id="marginAmount">-</span>
+                                        <span style="font-weight:700;color:var(--on-surface);" id="marginAmount">-</span>
                                         <span style="width:1px;height:14px;background:var(--border);"></span>
                                         <span style="color:var(--gray-500);">마진율</span>
                                         <span style="font-weight:700;" id="marginRate">-</span>
@@ -260,11 +297,8 @@
                                 </div>
                                 <div class="fg">
                                     <label>재고수량</label>
-                                    <input type="text" id="fldStock" placeholder="추후 옵션에서 입력"
-                                        style="color:var(--gray-400);">
-                                    <span class="form-help"
-                                        style="margin-top:2px;font-size:10px;color:var(--gray-400);">옵션 설정 시 Step 2에서
-                                        입력</span>
+                                    <input type="text" id="fldStock" placeholder="추후 옵션에서 입력" style="color:var(--gray-400);">
+                                    <span class="form-help" style="margin-top:2px;font-size:10px;color:var(--gray-400);">옵션 설정 시 Step 3에서 입력</span>
                                 </div>
                                 <div class="fg">
                                     <label>부가세</label>
@@ -282,15 +316,27 @@
                                     </select>
                                 </div>
                             </div>
+                            <div class="wizard-section-title" style="margin-top:24px;">
+                                <i class='bx bx-support'></i> A/S 정보
+                            </div>
+                            <div class="form-grid">
+                                <div class="fg">
+                                    <label>A/S 전화번호</label>
+                                    <input type="text" id="fldAsPhone" placeholder="02-000-0000">
+                                </div>
+                                <div class="fg fg-full">
+                                    <label>A/S 안내</label>
+                                    <textarea id="fldAsGuide" rows="2" placeholder="A/S 관련 안내사항"></textarea>
+                                </div>
+                            </div>
                             <div class="wizard-footer">
-                                <button class="btn-primary" id="btnNext1">다음 <i
-                                        class='bx bx-right-arrow-alt'></i></button>
-                                <div></div>
+                                <button class="btn-primary" id="btnNext2">다음 <i class='bx bx-right-arrow-alt'></i></button>
+                                <button class="btn-secondary" id="btnPrev2"><i class='bx bx-left-arrow-alt'></i> 이전</button>
                             </div>
                         </div>
 
-                        <!-- Step 2: 옵션 및 재고 -->
-                        <div class="step-panel" id="step2">
+                        <!-- Step 3: 옵션 및 재고 -->
+                        <div class="step-panel" id="step3">
                             <div class="wizard-section-title">
                                 <i class='bx bx-list-plus'></i> 옵션 및 재고
                             </div>
@@ -365,15 +411,16 @@
                             </div>
 
                             <div class="wizard-footer">
-                                <button class="btn-primary" id="btnNext2">다음 <i
+                                <button class="btn-primary" id="btnNext3">다음 <i
                                         class='bx bx-right-arrow-alt'></i></button>
-                                <button class="btn-secondary" id="btnPrev2"><i class='bx bx-left-arrow-alt'></i>
+                                <button class="btn-secondary" id="btnPrev3"><i class='bx bx-left-arrow-alt'></i>
                                     이전</button>
                             </div>
+                        
                         </div>
 
-                        <!-- Step 3: 이미지 -->
-                        <div class="step-panel" id="step3">
+                        <!-- Step 4: 이미지 -->
+                        <div class="step-panel" id="step4">
                             <div class="wizard-section-title">
                                 <i class='bx bx-image'></i> 이미지 관리
                             </div>
@@ -430,15 +477,16 @@
                                 </div>
                             </div>
                             <div class="wizard-footer">
-                                <button class="btn-primary" id="btnNext3">다음 <i
+                                <button class="btn-primary" id="btnNext4">다음 <i
                                         class='bx bx-right-arrow-alt'></i></button>
-                                <button class="btn-secondary" id="btnPrev3"><i class='bx bx-left-arrow-alt'></i>
+                                <button class="btn-secondary" id="btnPrev4"><i class='bx bx-left-arrow-alt'></i>
                                     이전</button>
                             </div>
+                        
                         </div>
 
-                        <!-- Step 4: 상품 상세 -->
-                        <div class="step-panel" id="step4">
+                        <!-- Step 5: 상품 상세 -->
+                        <div class="step-panel" id="step5">
                             <div class="wizard-section-title">
                                 <i class='bx bx-detail'></i> 상품 상세 정보
                             </div>
@@ -508,63 +556,12 @@
                                 </div>
                             </div>
                             <div class="wizard-footer">
-                                <button class="btn-primary" id="btnNext4">다음 <i
-                                        class='bx bx-right-arrow-alt'></i></button>
-                                <button class="btn-secondary" id="btnPrev4"><i class='bx bx-left-arrow-alt'></i>
-                                    이전</button>
-                            </div>
-                        </div>
-
-                        <!-- Step 5: 배송/AS -->
-                        <div class="step-panel" id="step5">
-                            <div class="wizard-section-title">
-                                <i class='bx bx-package'></i> 배송 및 A/S 정보
-                            </div>
-                            <div class="form-grid">
-                                <div class="fg fg-full">
-                                    <label>배송 프리셋 <span class="required">*</span></label>
-                                    <select id="fldShippingPreset" onchange="if(typeof renderPresetSummary === 'function') renderPresetSummary(this.value)">
-                                        <option value="">프리셋 선택</option>
-                                    </select>
-                                    <span class="form-help" style="margin-top:2px;font-size:10px;color:var(--gray-400);">프리셋 관리 메뉴에서 배송 설정을 등록하세요.</span>
-                                </div>
-                                <!-- 프리셋 선택 시 배송 정보 요약 카드 -->
-                                <div class="fg fg-full" id="presetSummaryWrap" style="display:none;">
-                                    <div id="presetSummaryCard" style="padding:14px 16px;background:var(--surface-container);border-radius:10px;border:1px solid var(--surface-container-high);">
-                                    </div>
-                                </div>
-                                <div class="fg">
-                                    <label>출고지</label>
-                                    <select id="fldShippingAddress">
-                                        <option value="">주소 선택</option>
-                                    </select>
-                                </div>
-                                <div class="fg">
-                                    <label>반품/교환지</label>
-                                    <select id="fldReturnAddress">
-                                        <option value="">주소 선택</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="wizard-section-title" style="margin-top:24px;">
-                                <i class='bx bx-support'></i> A/S 정보
-                            </div>
-                            <div class="form-grid">
-                                <div class="fg">
-                                    <label>A/S 전화번호</label>
-                                    <input type="text" id="fldAsPhone" placeholder="02-000-0000">
-                                </div>
-                                <div class="fg fg-full">
-                                    <label>A/S 안내</label>
-                                    <textarea id="fldAsGuide" rows="2" placeholder="A/S 관련 안내사항"></textarea>
-                                </div>
-                            </div>
-                            <div class="wizard-footer">
                                 <button class="btn-primary" id="btnNext5">다음 <i
                                         class='bx bx-right-arrow-alt'></i></button>
                                 <button class="btn-secondary" id="btnPrev5"><i class='bx bx-left-arrow-alt'></i>
                                     이전</button>
                             </div>
+                        
                         </div>
 
                         <!-- Step 6: 미리보기 -->
