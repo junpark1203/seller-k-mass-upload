@@ -553,7 +553,7 @@ function downloadExcel() {
             var lastRow = products.length + 1; // +1 because data starts at row 3 (index 2), header rows = 0,1
             ws['!ref'] = 'A1:CO' + (lastRow + 1);
 
-            // ── 행 높이 자동 조절: 셀 내 줄바꿈(\n) 수에 맞춰 높이 설정 ──
+            // ── 행 높이 자동 조절 + 위쪽 맞춤 일괄 적용 ──
             var rowHeights = [
                 { hpt: 30 },  // 1행: 그룹 헤더
                 { hpt: 40 }   // 2행: 컬럼 헤더
@@ -562,10 +562,19 @@ function downloadExcel() {
                 var maxLines = 1;
                 for (var ci = 0; ci < 93; ci++) {
                     var ref = XLSX.utils.encode_cell({ r: ri, c: ci });
-                    if (ws[ref] && ws[ref].v) {
-                        var val = String(ws[ref].v);
-                        var lines = val.split('\n').length;
-                        if (lines > maxLines) maxLines = lines;
+                    if (ws[ref]) {
+                        // 위쪽 맞춤 일괄 적용 (기존 스타일 병합)
+                        var existingStyle = ws[ref].s || {};
+                        var existingAlign = existingStyle.alignment || {};
+                        ws[ref].s = Object.assign({}, existingStyle, {
+                            alignment: Object.assign({}, existingAlign, { vertical: 'top' })
+                        });
+                        // 줄바꿈 수 계산
+                        if (ws[ref].v) {
+                            var val = String(ws[ref].v);
+                            var lines = val.split('\n').length;
+                            if (lines > maxLines) maxLines = lines;
+                        }
                     }
                 }
                 rowHeights.push({ hpt: Math.max(18, maxLines * 15) });
