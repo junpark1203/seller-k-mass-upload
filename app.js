@@ -40,6 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
         initProductList();
         initExport();
         initPresets();
+        initMarginPresets();
         initAddresses();
         // startNewProduct()는 handleRoute() → #register 진입 시 자동 호출
         updateConnectionStatus(true);
@@ -57,6 +58,7 @@ document.addEventListener('DOMContentLoaded', function() {
         initProductList();
         initExport();
         initPresets();
+        initMarginPresets();
         initAddresses();
         // startNewProduct()는 handleRoute() → #register 진입 시 자동 호출
         updateConnectionStatus(false);
@@ -140,8 +142,8 @@ function initRouter() {
 
 function handleRoute() {
     var hash = location.hash.replace('#', '') || 'register';
-    var pages = {register:'pageRegister', products:'pageProducts', export:'pageExport', presets:'pagePresets', addresses:'pageAddresses'};
-    var titles = {register:'상품 등록/수정', products:'상품 목록', export:'엑셀 생성', presets:'프리셋 관리', addresses:'주소 관리'};
+    var pages = {register:'pageRegister', products:'pageProducts', export:'pageExport', presets:'pagePresets', marginPresets:'pageMarginPresets', addresses:'pageAddresses'};
+    var titles = {register:'상품 등록/수정', products:'상품 목록', export:'엑셀 생성', presets:'배송 프리셋 관리', marginPresets:'마진 프리셋 관리', addresses:'주소 관리'};
     Object.values(pages).forEach(function(id) {
         var el = document.getElementById(id);
         if (el) el.classList.remove('active');
@@ -312,6 +314,7 @@ function initStep1Extras() {
         vatSelect.addEventListener('change', function() {
             vatCheckbox.checked = (vatSelect.value === '과세상품');
             updateMarginDisplay();
+            calculateRecommendedPrice();
         });
     }
 
@@ -322,10 +325,19 @@ function initStep1Extras() {
     var buyShipInput = document.getElementById('fldBuyShippingFee');
     if (saleInput && buyInput) {
         saleInput.addEventListener('input', updateMarginDisplay);
-        buyInput.addEventListener('input', updateMarginDisplay);
+        buyInput.addEventListener('input', function() {
+            updateMarginDisplay();
+            calculateRecommendedPrice();
+        });
     }
-    if (saleShipInput) saleShipInput.addEventListener('input', updateMarginDisplay);
-    if (buyShipInput) buyShipInput.addEventListener('input', updateMarginDisplay);
+    if (saleShipInput) saleShipInput.addEventListener('input', function() {
+        updateMarginDisplay();
+        calculateRecommendedPrice();
+    });
+    if (buyShipInput) buyShipInput.addEventListener('input', function() {
+        updateMarginDisplay();
+        calculateRecommendedPrice();
+    });
 
     // Stock field color change
     var stockInput = document.getElementById('fldStock');
@@ -333,6 +345,74 @@ function initStep1Extras() {
         stockInput.addEventListener('input', function() {
             stockInput.style.color = stockInput.value ? 'var(--on-surface)' : 'var(--gray-400)';
         });
+    }
+}
+
+function calculateRecommendedPrice() {
+    var presetId = document.getElementById('fldMarginPreset').value;
+    var labelEl = document.getElementById('recommendedPriceLabel');
+    if (!presetId || !labelEl) {
+        if (labelEl) labelEl.style.display = 'none';
+        return;
+    }
+    
+    var presets = Storage.getMarginPresets();
+    var p = presets.find(function(x) { return x.id === presetId; });
+    if (!p) {
+        labelEl.style.display = 'none';
+        return;
+    }
+    
+    var buyPrice = parseInt(document.getElementById('fldBuyPrice').value) || 0;
+    var buyShip = parseInt(document.getElementById('fldBuyShippingFee').value) || 0;
+    var saleShip = parseInt(document.getElementById('fldSaleShippingFee').value) || 0;
+    
+    var totalCost = buyPrice + buyShip;
+    var vatType = document.getElementById('fldVat') ? document.getElementById('fldVat').value : '과세상품';
+    var isTaxable = (vatType === '과세상품');
+    var taxDivider = isTaxable ? 1.1 : 1.0;
+    
+    function calcPrice(target, type) {
+        // 목표 마진을 얻기 위한 수식
+        // 수익 = (판매가+판매배송비)/taxDivider - (매입가+매입배송비)
+        // 원(KRW): (판매가+판매배송비) = (목표 + 총원가) * taxDivider
+        // 퍼센트(%): 수익 = ((판매가+판매배송비)/taxDivider) * (목표%/100)
+        // -> 목표금액(원) = ((판매가+판매배송비)/taxDivider) * (목표%/100)
+        // -> (판매가+판매배송비)/taxDivider - 총원가 = ((판매가+판매배송비)/taxDivider) * (목표%/100)
+        // -> ((판매가+판매배송비)/taxDivider) * (1 - 목표%/100) = 총원가
+        // -> (판매가+판매배송비) = (총원가 / (1 - 목표%/100)) * taxDivider
+        
+        var targetTotalSale = 0;
+        if (type === '원') {
+            targetTotalSale = (totalCost + target) * taxDivider;
+        } else if (type === '%') {
+            if (target >= 100) target = 99; // 마진율 100% 이상은 불가능하므로 보정
+            targetTotalSale = (totalCost / (1 - (target/100))) * taxDivider;
+        }
+        
+        var recommendedSalePrice = targetTotalSale - saleShip;
+        
+        // 100원 단위 올림(Math.ceil)
+        // ex) 15312 -> 15400
+        return Math.ceil(recommendedSalePrice / 100) * 100;
+    }
+    
+    var minSale = calcPrice(p.minTarget, p.type);
+    
+    var text = '💡 추천: ' + formatCurrency(minSale) + '원';
+    if (p.maxTarget != null) {
+        var maxSale = calcPrice(p.maxTarget, p.type);
+        text += ' ~ ' + formatCurrency(maxSale) + '원';
+    }
+    
+    labelEl.textContent = text;
+    labelEl.style.display = 'inline';
+    
+    // 사용자가 프리셋을 고르거나 원가를 입력할 때, 판매가가 비어있거나 기존 추천가와 동일했다면 자동 갱신
+    var saleInput = document.getElementById('fldSalePrice');
+    if (saleInput && (!saleInput.value || saleInput.value === '0' || parseInt(saleInput.value) === window._lastRecommendedSalePrice)) {
+        saleInput.value = minSale;
+        window._lastRecommendedSalePrice = minSale;
     }
 }
 

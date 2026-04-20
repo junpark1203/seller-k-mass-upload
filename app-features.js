@@ -1312,3 +1312,185 @@ function renderPresetSummary(presetId) {
     card.innerHTML = html;
     wrap.style.display = 'block';
 }
+
+// ════════════════════════════════════════
+// MARGIN PRESETS
+// ════════════════════════════════════════
+var _editingMarginPresetId = null;
+
+function initMarginPresets() {
+    var addBtn = document.getElementById('btnAddMarginPreset');
+    var saveBtn = document.getElementById('btnSaveMarginPreset');
+    var cancelBtn = document.getElementById('btnCancelMarginPreset');
+    
+    if (addBtn) addBtn.addEventListener('click', function() {
+        var form = document.getElementById('marginPresetForm');
+        document.getElementById('pageMarginPresets').insertBefore(form, document.getElementById('marginPresetList'));
+        
+        resetMarginPresetForm();
+        form.classList.remove('hidden');
+        form.style.marginTop = '16px';
+        form.style.padding = '0';
+        form.style.borderTop = 'none';
+        
+        document.querySelectorAll('.margin-preset-card .bx-chevron-up').forEach(function(icon) {
+            icon.classList.remove('bx-chevron-up');
+            icon.classList.add('bx-chevron-down');
+        });
+    });
+    
+    if (cancelBtn) cancelBtn.addEventListener('click', function() {
+        document.getElementById('marginPresetForm').classList.add('hidden');
+        _editingMarginPresetId = null;
+    });
+    
+    if (saveBtn) saveBtn.addEventListener('click', saveMarginPreset);
+
+    renderMarginPresetList();
+    populateMarginPresetDropdown();
+}
+
+function resetMarginPresetForm() {
+    _editingMarginPresetId = null;
+    document.getElementById('fldMarginPresetName').value = '';
+    document.getElementById('fldMarginPresetType').value = '원';
+    document.getElementById('fldMarginPresetMin').value = '';
+    document.getElementById('fldMarginPresetMax').value = '';
+}
+
+function populateMarginPresetForm(presetId) {
+    var form = document.getElementById('marginPresetForm');
+    
+    if (_editingMarginPresetId === presetId) {
+        form.classList.add('hidden');
+        document.getElementById('pageMarginPresets').insertBefore(form, document.getElementById('marginPresetList'));
+        _editingMarginPresetId = null;
+        var iconStr = document.getElementById('margin_chevron_' + presetId);
+        if(iconStr) { iconStr.classList.remove('bx-chevron-up'); iconStr.classList.add('bx-chevron-down'); }
+        return;
+    }
+
+    document.querySelectorAll('.margin-preset-card .bx-chevron-up').forEach(function(ico) {
+        ico.classList.remove('bx-chevron-up');
+        ico.classList.add('bx-chevron-down');
+    });
+
+    var presets = Storage.getMarginPresets();
+    var p = presets.find(function(x) { return x.id === presetId; });
+    if (!p) return;
+
+    _editingMarginPresetId = p.id;
+    document.getElementById('fldMarginPresetName').value = p.name || '';
+    document.getElementById('fldMarginPresetType').value = p.type || '원';
+    document.getElementById('fldMarginPresetMin').value = p.minTarget || '';
+    document.getElementById('fldMarginPresetMax').value = p.maxTarget || '';
+
+    var container = document.getElementById('marginFormContainer_' + presetId);
+    if (container) {
+        container.appendChild(form);
+        form.style.marginTop = '0';
+        form.style.padding = '0 16px 16px 16px';
+        form.style.borderTop = '1px solid var(--border-color)';
+        form.style.paddingTop = '16px';
+    }
+    
+    form.classList.remove('hidden');
+    
+    var icon = document.getElementById('margin_chevron_' + presetId);
+    if (icon) {
+        icon.classList.remove('bx-chevron-down');
+        icon.classList.add('bx-chevron-up');
+    }
+}
+
+function saveMarginPreset() {
+    var name = document.getElementById('fldMarginPresetName').value.trim();
+    var type = document.getElementById('fldMarginPresetType').value;
+    var minTarget = parseInt(document.getElementById('fldMarginPresetMin').value);
+    var maxTarget = parseInt(document.getElementById('fldMarginPresetMax').value);
+
+    if (!name) { showToast('마진 프리셋명을 입력하세요.', 'warning'); return; }
+    if (isNaN(minTarget)) { showToast('최소 목표(값)를 입력하세요.', 'warning'); return; }
+
+    var preset = {
+        id: _editingMarginPresetId || ('margin_' + Date.now()),
+        name: name,
+        type: type,
+        minTarget: minTarget,
+        maxTarget: isNaN(maxTarget) ? null : maxTarget
+    };
+
+    Storage.saveMarginPresets(Storage.getMarginPresets().filter(function(p) { return p.id !== preset.id; }).concat(preset))
+        .then(function() {
+            showToast('마진 프리셋이 저장되었습니다.', 'success');
+            var form = document.getElementById('marginPresetForm');
+            document.getElementById('pageMarginPresets').insertBefore(form, document.getElementById('marginPresetList'));
+            form.classList.add('hidden');
+            _editingMarginPresetId = null;
+            renderMarginPresetList();
+            populateMarginPresetDropdown();
+        });
+}
+
+function deleteMarginPreset(id) {
+    if(!confirm('선택한 마진 프리셋을 삭제하시겠습니까?')) return;
+    Storage.saveMarginPresets(Storage.getMarginPresets().filter(function(p) { return p.id !== id; }))
+        .then(function() {
+            showToast('삭제되었습니다.', 'info');
+            renderMarginPresetList();
+            populateMarginPresetDropdown();
+        });
+}
+
+function renderMarginPresetList() {
+    var list = document.getElementById('marginPresetList');
+    if (!list) return;
+
+    var form = document.getElementById('marginPresetForm');
+    if (form) {
+        document.getElementById('pageMarginPresets').insertBefore(form, document.getElementById('marginPresetList'));
+        form.classList.add('hidden');
+    }
+
+    var presets = Storage.getMarginPresets();
+    if (presets.length === 0) { list.innerHTML = '<p style="color:var(--gray-400);font-size:13px;">등록된 마진 프리셋이 없습니다.</p>'; return; }
+    
+    var html = '';
+    presets.forEach(function (p) {
+        html += '<div class="margin-preset-card hoverable" onclick="populateMarginPresetForm(\'' + p.id + '\')" style="cursor:pointer; margin-bottom:8px;background:var(--surface-container);border-radius:8px; overflow:hidden;">' +
+            '<div style="padding:16px;display:flex;justify-content:space-between;align-items:center;">' +
+            '<div><strong>' + p.name + '</strong> <span style="font-size:12px;color:var(--gray-400); margin-left:8px;">최소 ' + p.minTarget + p.type + (p.maxTarget ? ' ~ 최대 ' + p.maxTarget + p.type : '') + '</span></div>' +
+            '<div>';
+            
+        // prevent deleting defaults if we want, but let's allow it for margins
+        html += '<button class="btn-icon btn-sm" onclick="event.stopPropagation(); deleteMarginPreset(\'' + p.id + '\')" style="margin-right:12px;"><i class="bx bx-trash"></i></button>';
+        
+        html += '<i class="bx bx-chevron-down" id="margin_chevron_' + p.id + '" style="font-size:24px; color:var(--gray-400); vertical-align:middle;"></i></div>' +
+            '</div><div id="marginFormContainer_' + p.id + '"></div></div>';
+    });
+    list.innerHTML = html;
+}
+
+function populateMarginPresetDropdown() {
+    var sel = document.getElementById('fldMarginPreset');
+    if (!sel) return;
+    
+    // Remember currently selected
+    var currentVal = sel.value;
+    
+    sel.innerHTML = '<option value="">마진 프리셋 선택</option>';
+    var presets = Storage.getMarginPresets();
+    presets.forEach(function(p) {
+        var opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = p.name;
+        sel.appendChild(opt);
+    });
+    
+    if (presets.find(function(p){return p.id === currentVal;})) {
+        sel.value = currentVal;
+    } else if (presets.length > 0) {
+        // default select the first one if empty
+        sel.value = presets[0].id;
+    }
+}

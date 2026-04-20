@@ -74,7 +74,10 @@
 
                 <div class="menu-label">설정</div>
                 <a href="#presets" id="navPresets">
-                    <i class='bx bx-slider'></i> <span>프리셋 관리</span>
+                    <i class='bx bx-slider'></i> <span>배송 프리셋 관리</span>
+                </a>
+                <a href="#marginPresets" id="navMarginPresets">
+                    <i class='bx bx-calculator'></i> <span>마진 프리셋 관리</span>
                 </a>
                 <a href="#addresses" id="navAddresses">
                     <i class='bx bx-map'></i> <span>주소 관리</span>
@@ -265,26 +268,33 @@
                                     <select id="fldReturnAddress"><option value="">주소 선택</option></select>
                                 </div>
                                 <div class="fg">
-                                    <label>판매 배송비 <span style="font-size:10px;color:var(--gray-400);font-weight:400;">(부가세 포함)</span></label>
-                                    <input type="number" id="fldSaleShippingFee" min="0" placeholder="0" value="0">
-                                </div>
-                                <div class="fg">
                                     <label>매입 배송비 <span style="font-size:10px;color:var(--gray-400);font-weight:400;">(공급가 기준)</span></label>
                                     <input type="number" id="fldBuyShippingFee" min="0" placeholder="0" value="0">
                                 </div>
                                 <div class="fg">
-                                    <label style="display:flex;align-items:center;gap:6px;">
-                                        판매가 <span class="required">*</span>
+                                    <label>매입가 <span style="font-size:10px;color:var(--gray-400);font-weight:400;">(공급가 기준)</span></label>
+                                    <input type="number" id="fldBuyPrice" min="0" placeholder="0">
+                                </div>
+                                <div class="fg fg-full" style="margin-top:10px; margin-bottom:10px; border-top:1px dashed var(--border-color); padding-top:16px;">
+                                    <label>마진 설정 <span style="font-size:10px;color:var(--gray-400);font-weight:400;">(설정 탭에서 기준 관리)</span></label>
+                                    <select id="fldMarginPreset" onchange="if(typeof calculateRecommendedPrice === 'function') { calculateRecommendedPrice(); if(typeof updateMarginDisplay === 'function') updateMarginDisplay(); }">
+                                        <option value="">마진 프리셋 선택</option>
+                                    </select>
+                                </div>
+                                <div class="fg">
+                                    <label>판매 배송비 <span style="font-size:10px;color:var(--gray-400);font-weight:400;">(부가세 포함)</span></label>
+                                    <input type="number" id="fldSaleShippingFee" min="0" placeholder="0" value="0">
+                                </div>
+                                <div class="fg">
+                                    <label style="display:flex;align-items:center;">
+                                        판매가 <span class="required" style="margin-left:4px;">*</span>
+                                        <span id="recommendedPriceLabel" style="margin-left:8px;font-size:11px;color:var(--primary);font-weight:600;display:none;">💡 추천: 0원 ~ 0원</span>
                                         <label style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:500;color:var(--gray-500);margin-left:auto;cursor:default;">
                                             <input type="checkbox" id="fldVatIncluded" checked disabled style="width:12px;height:12px;accent-color:var(--primary);cursor:default;">
                                             부가세 포함
                                         </label>
                                     </label>
                                     <input type="number" id="fldSalePrice" min="0" placeholder="0">
-                                </div>
-                                <div class="fg">
-                                    <label>매입가 <span style="font-size:10px;color:var(--gray-400);font-weight:400;">(공급가 기준)</span></label>
-                                    <input type="number" id="fldBuyPrice" min="0" placeholder="0">
                                 </div>
                                 <div class="fg fg-full" id="marginDisplayWrap" style="display:none;">
                                     <div id="marginDisplay" style="display:flex;gap:20px;padding:8px 14px;background:var(--surface-container-low);border-radius:8px;font-size:12px;align-items:center;">
@@ -779,6 +789,44 @@
                         <div style="display:flex;gap:8px;margin-top:12px;">
                             <button class="btn-primary btn-sm" id="btnSavePreset">저장</button>
                             <button class="btn-outline btn-sm" id="btnCancelPreset">취소</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═══ PAGE: 마진 프리셋 관리 ═══ -->
+                <div class="page-view" id="pageMarginPresets">
+                    <div class="wizard-section-title">
+                        <i class='bx bx-calculator'></i> 마진 프리셋 관리
+                    </div>
+                    <div style="margin-bottom:16px;">
+                        <button class="btn-primary btn-sm" id="btnAddMarginPreset"><i class='bx bx-plus'></i> 마진 프리셋 추가</button>
+                    </div>
+                    <div id="marginPresetList"></div>
+                    <div id="marginPresetForm" class="hidden" style="margin-top:16px;" onclick="event.stopPropagation()">
+                        <div class="form-grid">
+                            <div class="fg">
+                                <label>마진 프리셋명 <span class="required">*</span></label>
+                                <input type="text" id="fldMarginPresetName" placeholder="예: 최소 마진 프로필">
+                            </div>
+                            <div class="fg">
+                                <label>목표 기준 <span class="required">*</span></label>
+                                <select id="fldMarginPresetType">
+                                    <option value="원">금액 (원)</option>
+                                    <option value="%">비율 (%)</option>
+                                </select>
+                            </div>
+                            <div class="fg">
+                                <label>최소 목표 <span class="required">*</span></label>
+                                <input type="number" id="fldMarginPresetMin" min="0" placeholder="예: 1000">
+                            </div>
+                            <div class="fg">
+                                <label>최대 목표</label>
+                                <input type="number" id="fldMarginPresetMax" min="0" placeholder="예: 2000 (선택사항)">
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:8px;margin-top:12px;">
+                            <button class="btn-primary btn-sm" id="btnSaveMarginPreset">저장</button>
+                            <button class="btn-outline btn-sm" id="btnCancelMarginPreset">취소</button>
                         </div>
                     </div>
                 </div>

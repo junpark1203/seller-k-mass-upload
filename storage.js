@@ -35,7 +35,8 @@ var Storage = {
             fetch(STORAGE_API + '/addresses').then(function(r) { return r.json(); }),
             fetch(STORAGE_API + '/export-cart').then(function(r) { return r.json(); }),
             fetch(STORAGE_API + '/settings/defaults').then(function(r) { return r.json(); }),
-            fetch(STORAGE_API + '/settings/cat_favorites').then(function(r) { return r.json(); })
+            fetch(STORAGE_API + '/settings/cat_favorites').then(function(r) { return r.json(); }),
+            fetch(STORAGE_API + '/settings/margin_presets').then(function(r) { return r.json(); }).catch(function() { return { value: null }; })
         ]).then(function(results) {
             self._cache.products = results[0] || [];
             self._cache.presets = results[1] || [];
@@ -43,6 +44,7 @@ var Storage = {
             self._cache.exportCart = results[3] || [];
             self._cache.settings.defaults = (results[4] && results[4].value) ? results[4].value : self._defaultValues();
             self._cache.settings.cat_favorites = (results[5] && results[5].value) ? results[5].value : [];
+            self._cache.settings.margin_presets = (results[6] && results[6].value) ? results[6].value : self._defaultMarginPresets();
             self._initialized = true;
             console.log('[Storage] 서버 데이터 로드 완료 — 상품:', self._cache.products.length,
                 '프리셋:', self._cache.presets.length, '주소:', self._cache.addresses.length);
@@ -266,6 +268,29 @@ var Storage = {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ value: favs })
         });
+    },
+
+    // ════════════════════════════════════════
+    // Margin Presets
+    // ════════════════════════════════════════
+    getMarginPresets: function() {
+        return this._cache.settings.margin_presets || this._defaultMarginPresets();
+    },
+
+    saveMarginPresets: function(presets) {
+        this._cache.settings.margin_presets = presets;
+        return fetch(STORAGE_API + '/settings/margin_presets', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ value: presets })
+        });
+    },
+
+    _defaultMarginPresets: function() {
+        return [
+            { id: 'margin_default', name: '기본 마진 (1,000원~2,000원)', type: '원', minTarget: 1000, maxTarget: 2000 },
+            { id: 'margin_1', name: '안전화 목표 마진 (15%~20%)', type: '%', minTarget: 15, maxTarget: 20 }
+        ];
     },
 
     // ════════════════════════════════════════
