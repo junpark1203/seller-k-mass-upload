@@ -510,9 +510,9 @@ function populateForm() {
     if (retAddrSel && currentProduct.returnAddressId) retAddrSel.value = currentProduct.returnAddressId;
     // AS info
     var asPhoneEl = document.getElementById('fldAsPhone');
-    if (asPhoneEl) asPhoneEl.value = currentProduct.asPhone || '';
+    if (asPhoneEl) asPhoneEl.value = currentProduct.asPhone || '02-2038-0160';
     var asGuideEl = document.getElementById('fldAsGuide');
-    if (asGuideEl) asGuideEl.value = currentProduct.asGuide || '';
+    if (asGuideEl) asGuideEl.value = currentProduct.asGuide || '상품상세 참조';
 }
 
 // ════════════════════════════════════════
