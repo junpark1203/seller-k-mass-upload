@@ -147,7 +147,7 @@ function createEmptyProduct() {
         brand: '',
         manufacturer: '',
         mfgDate: '',
-        originCode: '0000',
+        originCode: '03',
         originName: '상세설명에 표시',
         minorPurchase: defaults.minorPurchase || 'Y',
         noticeName: '상세설명에 표시',
