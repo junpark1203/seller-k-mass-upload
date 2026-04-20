@@ -1514,25 +1514,15 @@ function populateMarginPresetDropdown() {
 function initFooterImages() {
     var noticeInput = document.getElementById('noticeLibInput');
     var consentInput = document.getElementById('consentLibInput');
-    var noticeZone = document.getElementById('noticeLibUpload');
-    var consentZone = document.getElementById('consentLibUpload');
     
-    if (noticeInput) noticeInput.addEventListener('change', function(e) { handleFooterImageUpload(e.target.files, 'notice'); });
-    if (consentInput) consentInput.addEventListener('change', function(e) { handleFooterImageUpload(e.target.files, 'consent'); });
-    
-    function bindDrop(zone, type) {
-        if (!zone) return;
-        zone.addEventListener('dragover', function(e) { e.preventDefault(); e.stopPropagation(); zone.style.background = 'var(--surface-container-high)'; });
-        zone.addEventListener('dragleave', function(e) { e.preventDefault(); e.stopPropagation(); zone.style.background = ''; });
-        zone.addEventListener('drop', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            zone.style.background = '';
-            handleFooterImageUpload(e.dataTransfer.files, type);
-        });
-    }
-    bindDrop(noticeZone, 'notice');
-    bindDrop(consentZone, 'consent');
+    if (noticeInput) noticeInput.addEventListener('change', function(e) { 
+        handleFooterImageUpload(e.target.files, 'notice'); 
+        e.target.value = '';
+    });
+    if (consentInput) consentInput.addEventListener('change', function(e) { 
+        handleFooterImageUpload(e.target.files, 'consent'); 
+        e.target.value = '';
+    });
     
     renderFooterGalleries();
     renderFooterImagePreviews();
