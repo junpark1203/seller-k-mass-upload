@@ -334,6 +334,37 @@ var Storage = {
         }).then(function(r) { return r.json(); });
     },
 
+    uploadImageFromUrl: function(url, productCode, type, index) {
+        var urlPath = '';
+        try { urlPath = new URL(url).pathname; } catch(e) {}
+        var ext = (urlPath.split('.').pop() || 'jpg').toLowerCase();
+        if (['jpg','jpeg','png','gif','webp','bmp'].indexOf(ext) === -1) ext = 'jpg';
+        var autoName;
+        if (type === 'main') {
+            autoName = productCode + '_main.' + ext;
+        } else if (type === 'add') {
+            autoName = productCode + '_add' + String((index || 0) + 1).padStart(2, '0') + '.' + ext;
+        } else if (type === 'detail') {
+            autoName = productCode + '_detail' + String((index || 0) + 1).padStart(2, '0') + '.' + ext;
+        } else {
+            autoName = productCode + '_img.' + ext;
+        }
+        return fetch(STORAGE_API + '/images/upload-url', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: url, autoName: autoName })
+        }).then(function(r) {
+            if (!r.ok) return r.json().then(function(e) { throw new Error(e.error); });
+            return r.json();
+        }).then(function(res) {
+            return {
+                filename: res.filename,
+                url: res.url,
+                autoName: res.filename
+            };
+        });
+    },
+
     // 이미지 메타데이터 (메모리 관리 — 상품 data JSON에 포함)
     getProductImages: function(productId) {
         var product = this.getProduct(productId);

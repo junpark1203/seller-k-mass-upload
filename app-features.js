@@ -16,6 +16,104 @@ function initImageManager() {
     });
     if (addInput) addInput.addEventListener('change', function (e) { handleAdditionalImages(e.target.files); });
     if (detailInput) detailInput.addEventListener('change', function (e) { handleDetailImages(e.target.files); });
+
+    // URL 버튼 이벤트
+    var btnMainUrl = document.getElementById('btnMainImageUrl');
+    var btnAddUrl = document.getElementById('btnAddImageUrl');
+    var btnDetailUrl = document.getElementById('btnDetailImageUrl');
+    if (btnMainUrl) btnMainUrl.addEventListener('click', function() {
+        showUrlInputModal('대표 이미지 URL', false, function(urls) { handleMainImageUrl(urls[0]); });
+    });
+    if (btnAddUrl) btnAddUrl.addEventListener('click', function() {
+        showUrlInputModal('추가 이미지 URL (한 줄에 하나씩)', true, function(urls) { handleAdditionalImageUrls(urls); });
+    });
+    if (btnDetailUrl) btnDetailUrl.addEventListener('click', function() {
+        showUrlInputModal('상세설명 이미지 URL (한 줄에 하나씩)', true, function(urls) { handleDetailImageUrls(urls); });
+    });
+}
+
+// ── URL 입력 모달 ──
+function showUrlInputModal(title, multiline, callback) {
+    var overlay = document.createElement('div');
+    overlay.className = 'url-modal-overlay';
+    overlay.innerHTML =
+        '<div class="url-modal">' +
+        '  <div class="url-modal-title">' + title + '</div>' +
+        (multiline
+            ? '  <textarea class="url-modal-input" rows="6" placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg"></textarea>'
+            : '  <input type="text" class="url-modal-input" placeholder="https://example.com/image.jpg">') +
+        '  <div class="url-modal-actions">' +
+        '    <button class="btn-outline btn-sm url-modal-cancel">취소</button>' +
+        '    <button class="btn-primary btn-sm url-modal-confirm">확인</button>' +
+        '  </div>' +
+        '</div>';
+    document.body.appendChild(overlay);
+
+    var input = overlay.querySelector('.url-modal-input');
+    input.focus();
+
+    overlay.querySelector('.url-modal-cancel').addEventListener('click', function() { overlay.remove(); });
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+    overlay.querySelector('.url-modal-confirm').addEventListener('click', function() {
+        var value = input.value.trim();
+        if (!value) { overlay.remove(); return; }
+        var urls = value.split('\n').map(function(u) { return u.trim(); }).filter(function(u) { return u.length > 0; });
+        overlay.remove();
+        if (urls.length > 0) callback(urls);
+    });
+}
+
+// ── URL 이미지 핸들러 ──
+function handleMainImageUrl(url) {
+    showToast('URL에서 이미지 다운로드 중...', 'info');
+    ensureProductCode().then(function(code) {
+        return Storage.uploadImageFromUrl(url, code, 'main', 0);
+    }).then(function(result) {
+        currentImages.main = { name: result.filename, url: result.url, autoName: result.autoName, filename: result.filename };
+        renderImagePreviews();
+        showToast('이미지 다운로드 완료!', 'success');
+    }).catch(function(err) {
+        showToast('URL 이미지 다운로드 실패: ' + err.message, 'error');
+    });
+}
+
+function handleAdditionalImageUrls(urls) {
+    showToast(urls.length + '개 이미지 다운로드 중...', 'info');
+    ensureProductCode().then(function(code) {
+        var promises = [];
+        urls.forEach(function(url, i) {
+            if (currentImages.additional.length + i < 9) {
+                promises.push(Storage.uploadImageFromUrl(url, code, 'add', currentImages.additional.length + i));
+            }
+        });
+        return Promise.all(promises);
+    }).then(function(results) {
+        results.forEach(function(result) {
+            currentImages.additional.push({ name: result.filename, url: result.url, autoName: result.autoName, filename: result.filename });
+        });
+        renderImagePreviews();
+        showToast(results.length + '개 이미지 다운로드 완료!', 'success');
+    }).catch(function(err) {
+        showToast('URL 이미지 다운로드 실패: ' + err.message, 'error');
+    });
+}
+
+function handleDetailImageUrls(urls) {
+    showToast(urls.length + '개 이미지 다운로드 중...', 'info');
+    ensureProductCode().then(function(code) {
+        var promises = urls.map(function(url, i) {
+            return Storage.uploadImageFromUrl(url, code, 'detail', currentImages.detail.length + i);
+        });
+        return Promise.all(promises);
+    }).then(function(results) {
+        results.forEach(function(result) {
+            currentImages.detail.push({ name: result.filename, url: result.url, autoName: result.autoName, filename: result.filename });
+        });
+        renderImagePreviews();
+        showToast(results.length + '개 이미지 다운로드 완료!', 'success');
+    }).catch(function(err) {
+        showToast('URL 이미지 다운로드 실패: ' + err.message, 'error');
+    });
 }
 
 function handleMainImage(file) {
