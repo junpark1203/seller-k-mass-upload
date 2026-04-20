@@ -533,7 +533,7 @@ function downloadExcel() {
                 var images = p._images || { main: null, additional: [], detail: [] };
                 var addImgs = images.additional || [];
                 var detailImgs = images.detail || [];
-                var detailUrls = detailImgs.map(function(img) { return img.url || img.autoName; }).join('\n');
+                var detailUrls = detailImgs.map(function(img) { var _u = img.url || img.autoName; return _u ? '<img src="' + _u + '">' : ''; }).join('');
                 var presets = Storage.getShippingPresets();
                 var sp = presets.find(function(pr) { return pr.id === p.shippingPresetId; }) || presets[0] || {};
 
