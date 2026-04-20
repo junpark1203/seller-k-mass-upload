@@ -340,6 +340,10 @@ var Storage = {
             autoName = productCode + '_add' + String((index || 0) + 1).padStart(2, '0') + '.' + ext;
         } else if (type === 'detail') {
             autoName = productCode + '_detail' + String((index || 0) + 1).padStart(2, '0') + '.' + ext;
+        } else if (type === 'notice') {
+            autoName = 'notice_' + Date.now() + '_' + String((index || 0) + 1).padStart(2, '0') + '.' + ext;
+        } else if (type === 'consent') {
+            autoName = 'consent_' + Date.now() + '_' + String((index || 0) + 1).padStart(2, '0') + '.' + ext;
         } else {
             autoName = productCode + '_img.' + ext;
         }
@@ -377,6 +381,10 @@ var Storage = {
             autoName = productCode + '_add' + String((index || 0) + 1).padStart(2, '0') + '.' + ext;
         } else if (type === 'detail') {
             autoName = productCode + '_detail' + String((index || 0) + 1).padStart(2, '0') + '.' + ext;
+        } else if (type === 'notice') {
+            autoName = 'notice_' + Date.now() + '_' + String((index || 0) + 1).padStart(2, '0') + '.' + ext;
+        } else if (type === 'consent') {
+            autoName = 'consent_' + Date.now() + '_' + String((index || 0) + 1).padStart(2, '0') + '.' + ext;
         } else {
             autoName = productCode + '_img.' + ext;
         }
