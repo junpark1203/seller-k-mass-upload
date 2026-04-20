@@ -123,6 +123,9 @@ function dataUrlToBlob(dataUrl) {
 
 function createEmptyProduct() {
     var defaults = Storage.getDefaults();
+    var defaultNotice = Storage.getNoticeImages().find(function(i) { return i.isDefault; });
+    var defaultConsent = Storage.getConsentImages().find(function(i) { return i.isDefault; });
+    
     return {
         id: uuid(),
         code: generateProductCode(),
@@ -164,6 +167,8 @@ function createEmptyProduct() {
         displayVolume: '',
         displayUnit: '',
         totalVolume: '',
+        noticeImageId: defaultNotice ? defaultNotice.id : '',
+        consentImageId: defaultConsent ? defaultConsent.id : '',
         remarks: ''
     };
 }

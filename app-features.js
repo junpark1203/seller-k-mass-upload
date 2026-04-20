@@ -534,6 +534,19 @@ function downloadExcel() {
                 var addImgs = images.additional || [];
                 var detailImgs = images.detail || [];
                 var detailUrls = detailImgs.map(function(img) { var _u = img.url || img.autoName; return _u ? '<img src="' + _u + '">' : ''; }).join('');
+                
+                var noticeImgs = Storage.getNoticeImages();
+                var consentImgs = Storage.getConsentImages();
+                
+                var nImg = noticeImgs.find(function(n) { return n.id === p.noticeImageId; });
+                if (nImg && (nImg.url || nImg.autoName)) {
+                    detailUrls += '<img src="' + (nImg.url || nImg.autoName) + '">';
+                }
+                
+                var cImg = consentImgs.find(function(c) { return c.id === p.consentImageId; });
+                if (cImg && (cImg.url || cImg.autoName)) {
+                    detailUrls += '<img src="' + (cImg.url || cImg.autoName) + '">';
+                }
                 var presets = Storage.getShippingPresets();
                 var sp = presets.find(function(pr) { return pr.id === p.shippingPresetId; }) || presets[0] || {};
 
@@ -1492,5 +1505,181 @@ function populateMarginPresetDropdown() {
     } else if (presets.length > 0) {
         // default select the first one if empty
         sel.value = presets[0].id;
+    }
+}
+
+// ════════════════════════════════════════
+// FOOTER IMAGES (NOTICE / CONSENT)
+// ════════════════════════════════════════
+function initFooterImages() {
+    var noticeInput = document.getElementById('noticeLibInput');
+    var consentInput = document.getElementById('consentLibInput');
+    
+    if (noticeInput) noticeInput.addEventListener('change', function(e) { handleFooterImageUpload(e.target.files, 'notice'); });
+    if (consentInput) consentInput.addEventListener('change', function(e) { handleFooterImageUpload(e.target.files, 'consent'); });
+    
+    renderFooterGalleries();
+    renderFooterImagePreviews();
+}
+
+function handleFooterImageUpload(files, type) {
+    if (!files || files.length === 0) return;
+    ensureProductCode().then(function(code) {
+        var promises = [];
+        for (var i = 0; i < files.length; i++) {
+            promises.push(Storage.uploadImage(files[i], code, type, i));
+        }
+        return Promise.all(promises);
+    }).then(function(results) {
+        var list = type === 'notice' ? Storage.getNoticeImages() : Storage.getConsentImages();
+        var idPrefix = type + '_' + Date.now() + '_';
+        results.forEach(function(r, idx) {
+            list.push({
+                id: idPrefix + idx,
+                filename: r.filename,
+                url: r.url,
+                autoName: r.autoName,
+                isDefault: (list.length === 0 && idx === 0) // 첫 이미지면 기본값으로 자동지정
+            });
+        });
+        if (type === 'notice') Storage.saveNoticeImages(list);
+        else Storage.saveConsentImages(list);
+        
+        renderFooterGalleries();
+        renderFooterImagePreviews();
+        showToast('이미지 ' + results.length + '장 업로드 완료', 'success');
+    }).catch(function(err) {
+        showToast('업로드 실패: ' + err.message, 'error');
+    });
+}
+
+function renderFooterGalleries() {
+    _renderCategoryGallery('noticeLibGrid', Storage.getNoticeImages(), 'notice');
+    _renderCategoryGallery('consentLibGrid', Storage.getConsentImages(), 'consent');
+}
+
+function _renderCategoryGallery(gridId, images, type) {
+    var grid = document.getElementById(gridId);
+    if (!grid) return;
+    
+    // 기존 프리뷰 카드들 삭제
+    grid.querySelectorAll('.gallery-card').forEach(function(el) { el.remove(); });
+    
+    var uploadBox = grid.querySelector('.image-upload-small');
+    
+    images.forEach(function(img) {
+        var card = document.createElement('div');
+        card.className = 'gallery-card';
+        card.style.position = 'relative';
+        card.style.width = '120px';
+        card.style.height = '120px';
+        card.style.border = '1px solid var(--border-color)';
+        card.style.borderRadius = '6px';
+        card.style.backgroundImage = 'url("' + (img.url || img.autoName) + '")';
+        card.style.backgroundSize = 'contain';
+        card.style.backgroundPosition = 'center';
+        card.style.backgroundRepeat = 'no-repeat';
+        card.style.backgroundColor = '#fff';
+        
+        // Star Button
+        var starBtn = document.createElement('button');
+        starBtn.innerHTML = img.isDefault ? "<i class='bx bxs-star'></i>" : "<i class='bx bx-star'></i>";
+        starBtn.style.position = 'absolute';
+        starBtn.style.top = '4px';
+        starBtn.style.left = '4px';
+        starBtn.style.background = img.isDefault ? '#fbbf24' : 'rgba(0,0,0,0.5)';
+        starBtn.style.color = 'white';
+        starBtn.style.border = 'none';
+        starBtn.style.borderRadius = '50%';
+        starBtn.style.width = '24px';
+        starBtn.style.height = '24px';
+        starBtn.style.cursor = 'pointer';
+        starBtn.title = img.isDefault ? '기본값 설정됨' : '기본값으로 설정';
+        starBtn.onclick = function() {
+            images.forEach(function(i) { i.isDefault = false; });
+            img.isDefault = true;
+            if(type === 'notice') Storage.saveNoticeImages(images);
+            else Storage.saveConsentImages(images);
+            renderFooterGalleries();
+            renderFooterImagePreviews();
+        };
+        
+        // Trash Button
+        var trashBtn = document.createElement('button');
+        trashBtn.innerHTML = "<i class='bx bx-trash'></i>";
+        trashBtn.style.position = 'absolute';
+        trashBtn.style.top = '4px';
+        trashBtn.style.right = '4px';
+        trashBtn.style.background = 'var(--danger)';
+        trashBtn.style.color = 'white';
+        trashBtn.style.border = 'none';
+        trashBtn.style.borderRadius = '50%';
+        trashBtn.style.width = '24px';
+        trashBtn.style.height = '24px';
+        trashBtn.style.cursor = 'pointer';
+        trashBtn.onclick = function() {
+            if(confirm('이 이미지를 삭제하시겠습니까?')) {
+                var newList = images.filter(function(i) { return i.id !== img.id; });
+                if(type === 'notice') Storage.saveNoticeImages(newList);
+                else Storage.saveConsentImages(newList);
+                renderFooterGalleries();
+                renderFooterImagePreviews();
+            }
+        };
+        
+        card.appendChild(starBtn);
+        card.appendChild(trashBtn);
+        grid.insertBefore(card, uploadBox);
+    });
+}
+
+function renderFooterImagePreviews() {
+    var noticeSel = document.getElementById('fldNoticeImageId');
+    var consentSel = document.getElementById('fldConsentImageId');
+    var noticePreview = document.getElementById('noticeImagePreview');
+    var consentPreview = document.getElementById('consentImagePreview');
+    
+    // Notice
+    if (noticeSel) {
+        var notices = Storage.getNoticeImages();
+        var currentNoticeVal = noticeSel.value;
+        noticeSel.innerHTML = '<option value="">(없음) 공지사항 미적용</option>';
+        notices.forEach(function(n) {
+            var opt = document.createElement('option');
+            opt.value = n.id;
+            opt.textContent = (n.isDefault ? '[기본] ' : '') + n.filename;
+            noticeSel.appendChild(opt);
+        });
+        if (currentNoticeVal) noticeSel.value = currentNoticeVal;
+
+        var activeNotice = notices.find(function(n) { return n.id === noticeSel.value; });
+        if (activeNotice) {
+            noticePreview.style.backgroundImage = 'url("' + (activeNotice.url || activeNotice.autoName) + '")';
+            noticePreview.style.display = 'block';
+        } else {
+            noticePreview.style.display = 'none';
+        }
+    }
+    
+    // Consent
+    if (consentSel) {
+        var consents = Storage.getConsentImages();
+        var currentConsentVal = consentSel.value;
+        consentSel.innerHTML = '<option value="">(없음) 동의서 미적용</option>';
+        consents.forEach(function(c) {
+            var opt = document.createElement('option');
+            opt.value = c.id;
+            opt.textContent = (c.isDefault ? '[기본] ' : '') + c.filename;
+            consentSel.appendChild(opt);
+        });
+        if (currentConsentVal) consentSel.value = currentConsentVal;
+
+        var activeConsent = consents.find(function(c) { return c.id === consentSel.value; });
+        if (activeConsent) {
+            consentPreview.style.backgroundImage = 'url("' + (activeConsent.url || activeConsent.autoName) + '")';
+            consentPreview.style.display = 'block';
+        } else {
+            consentPreview.style.display = 'none';
+        }
     }
 }

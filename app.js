@@ -42,6 +42,7 @@ document.addEventListener('DOMContentLoaded', function() {
         initPresets();
         initMarginPresets();
         initAddresses();
+        initFooterImages();
         // startNewProduct()는 handleRoute() → #register 진입 시 자동 호출
         updateConnectionStatus(true);
     }).catch(function(err) {
@@ -60,6 +61,7 @@ document.addEventListener('DOMContentLoaded', function() {
         initPresets();
         initMarginPresets();
         initAddresses();
+        initFooterImages();
         // startNewProduct()는 handleRoute() → #register 진입 시 자동 호출
         updateConnectionStatus(false);
     });
@@ -142,8 +144,8 @@ function initRouter() {
 
 function handleRoute() {
     var hash = location.hash.replace('#', '') || 'register';
-    var pages = {register:'pageRegister', products:'pageProducts', export:'pageExport', presets:'pagePresets', marginPresets:'pageMarginPresets', addresses:'pageAddresses'};
-    var titles = {register:'상품 등록/수정', products:'상품 목록', export:'엑셀 생성', presets:'배송 프리셋 관리', marginPresets:'마진 프리셋 관리', addresses:'주소 관리'};
+    var pages = {register:'pageRegister', products:'pageProducts', export:'pageExport', presets:'pagePresets', marginPresets:'pageMarginPresets', addresses:'pageAddresses', footerImages:'pageFooterImages'};
+    var titles = {register:'상품 등록/수정', products:'상품 목록', export:'엑셀 생성', presets:'배송 프리셋 관리', marginPresets:'마진 프리셋 관리', addresses:'주소 관리', footerImages:'안내 이미지 관리'};
     Object.values(pages).forEach(function(id) {
         var el = document.getElementById(id);
         if (el) el.classList.remove('active');
@@ -490,6 +492,11 @@ function collectStepData(step) {
         currentProduct.optionValues = optData.optionValues;
         currentProduct.combinations = optData.combinations;
         if (!optionEnabled) currentProduct.stock = optData.stock;
+    } else if (step === 4) {
+        var nEl = document.getElementById('fldNoticeImageId');
+        var cEl = document.getElementById('fldConsentImageId');
+        if (nEl) currentProduct.noticeImageId = nEl.value;
+        if (cEl) currentProduct.consentImageId = cEl.value;
     } else if (step === 5) {
         currentProduct.brand = document.getElementById('fldBrand').value.trim();
         currentProduct.manufacturer = document.getElementById('fldManufacturer').value.trim();
@@ -578,6 +585,11 @@ function populateForm() {
     }
     if (currentProduct.totalVolume) document.getElementById('fldTotalVolume').value = currentProduct.totalVolume;
     renderImagePreviews();
+    
+    document.getElementById('fldNoticeImageId').value = currentProduct.noticeImageId || '';
+    document.getElementById('fldConsentImageId').value = currentProduct.consentImageId || '';
+    if (typeof renderFooterImagePreviews === 'function') renderFooterImagePreviews();
+    
     // Step 2: Restore shipping preset & address selections
     var presetSel = document.getElementById('fldShippingPreset');
     if (presetSel && currentProduct.shippingPresetId) {

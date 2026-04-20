@@ -36,7 +36,9 @@ var Storage = {
             fetch(STORAGE_API + '/export-cart').then(function(r) { return r.json(); }),
             fetch(STORAGE_API + '/settings/defaults').then(function(r) { return r.json(); }),
             fetch(STORAGE_API + '/settings/cat_favorites').then(function(r) { return r.json(); }),
-            fetch(STORAGE_API + '/settings/margin_presets').then(function(r) { return r.json(); }).catch(function() { return { value: null }; })
+            fetch(STORAGE_API + '/settings/margin_presets').then(function(r) { return r.json(); }).catch(function() { return { value: null }; }),
+            fetch(STORAGE_API + '/settings/notice_images').then(function(r) { return r.json(); }).catch(function() { return { value: null }; }),
+            fetch(STORAGE_API + '/settings/consent_images').then(function(r) { return r.json(); }).catch(function() { return { value: null }; })
         ]).then(function(results) {
             self._cache.products = results[0] || [];
             self._cache.presets = results[1] || [];
@@ -45,6 +47,8 @@ var Storage = {
             self._cache.settings.defaults = (results[4] && results[4].value) ? results[4].value : self._defaultValues();
             self._cache.settings.cat_favorites = (results[5] && results[5].value) ? results[5].value : [];
             self._cache.settings.margin_presets = (results[6] && results[6].value) ? results[6].value : self._defaultMarginPresets();
+            self._cache.settings.notice_images = (results[7] && results[7].value) ? results[7].value : [];
+            self._cache.settings.consent_images = (results[8] && results[8].value) ? results[8].value : [];
             self._initialized = true;
             console.log('[Storage] 서버 데이터 로드 완료 — 상품:', self._cache.products.length,
                 '프리셋:', self._cache.presets.length, '주소:', self._cache.addresses.length);
@@ -64,6 +68,8 @@ var Storage = {
         try { this._cache.exportCart = JSON.parse(localStorage.getItem('kng_mass_export_cart')) || []; } catch(e) { this._cache.exportCart = []; }
         try { this._cache.settings.defaults = JSON.parse(localStorage.getItem('kng_mass_defaults')) || this._defaultValues(); } catch(e) { this._cache.settings.defaults = this._defaultValues(); }
         try { this._cache.settings.cat_favorites = JSON.parse(localStorage.getItem('kng_mass_cat_favorites')) || []; } catch(e) { this._cache.settings.cat_favorites = []; }
+        try { this._cache.settings.notice_images = JSON.parse(localStorage.getItem('kng_mass_notice_images')) || []; } catch(e) { this._cache.settings.notice_images = []; }
+        try { this._cache.settings.consent_images = JSON.parse(localStorage.getItem('kng_mass_consent_images')) || []; } catch(e) { this._cache.settings.consent_images = []; }
     },
 
     // ════════════════════════════════════════
@@ -503,6 +509,35 @@ var Storage = {
             keys.forEach(function(k) { localStorage.removeItem(k); });
             console.log('[Migration] 완료:', result);
             return result;
+        });
+    },
+
+    // ════════════════════════════════════════
+    // Footer Images (Notice / Consent)
+    // ════════════════════════════════════════
+    getNoticeImages: function() {
+        return this._cache.settings.notice_images || [];
+    },
+    saveNoticeImages: function(images) {
+        this._cache.settings.notice_images = images;
+        localStorage.setItem('kng_mass_notice_images', JSON.stringify(images));
+        return fetch(STORAGE_API + '/settings/notice_images', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ value: images })
+        });
+    },
+
+    getConsentImages: function() {
+        return this._cache.settings.consent_images || [];
+    },
+    saveConsentImages: function(images) {
+        this._cache.settings.consent_images = images;
+        localStorage.setItem('kng_mass_consent_images', JSON.stringify(images));
+        return fetch(STORAGE_API + '/settings/consent_images', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ value: images })
         });
     }
 };
