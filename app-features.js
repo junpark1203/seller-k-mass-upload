@@ -140,7 +140,6 @@ function saveProduct() {
     Storage.saveProduct(currentProduct).then(function() {
         showToast('상품이 저장되었습니다!', 'success');
         refreshProductList();
-        startNewProduct();
         _isDirty = false;
         location.hash = 'products';
     }).catch(function(err) {
@@ -215,7 +214,7 @@ function editProduct(id) {
     if (!p) return;
     
     _isDirty = false;
-    
+    _isEditing = true;  // handleRoute에서 startNewProduct 방지
     currentProduct = p;
     currentImages = p._images || { main: null, additional: [], detail: [] };
     populateForm(); // Added the missing data restoration call

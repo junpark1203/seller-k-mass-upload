@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function() {
         initExport();
         initPresets();
         initAddresses();
-        startNewProduct();
+        // startNewProduct()는 handleRoute() → #register 진입 시 자동 호출
         updateConnectionStatus(true);
     }).catch(function(err) {
         console.error('[App] 초기화 실패:', err);
@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', function() {
         initExport();
         initPresets();
         initAddresses();
-        startNewProduct();
+        // startNewProduct()는 handleRoute() → #register 진입 시 자동 호출
         updateConnectionStatus(false);
     });
 });
@@ -78,6 +78,7 @@ function updateConnectionStatus(online) {
 // ════════════════════════════════════════
 var _lastHash = location.hash.replace('#', '') || 'register';
 var _isDirty = false;
+var _isEditing = false;  // 편집 모드 플래그 (true면 startNewProduct 호출 안 함)
 var _ignoreHashChange = false;
 
 function initRouter() {
@@ -129,6 +130,7 @@ function initRouter() {
                         return;
                     }
                 }
+                _isEditing = false;
                 startNewProduct();
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
@@ -165,6 +167,11 @@ function handleRoute() {
         if (typeof renderExportCart === 'function') renderExportCart();
         else updateExportSummary();
     }
+    // register 진입 시: 편집 모드가 아니면 새 상품 폼 초기화
+    if (hash === 'register' && !_isEditing) {
+        startNewProduct();
+    }
+    _isEditing = false;  // 플래그 리셋
 }
 
 function updateExportSummary() {
