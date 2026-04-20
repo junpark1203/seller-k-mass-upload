@@ -245,7 +245,16 @@ function goToStep(n) {
     });
 }
 
+var _startNewProductLock = false;
 function startNewProduct() {
+    // 중복 호출 방지 (500ms 이내 재호출 무시)
+    if (_startNewProductLock) {
+        console.warn('[startNewProduct] 중복 호출 차단');
+        return;
+    }
+    _startNewProductLock = true;
+    setTimeout(function() { _startNewProductLock = false; }, 500);
+
     _isDirty = false;
     currentImages = { main: null, additional: [], detail: [] };
     
