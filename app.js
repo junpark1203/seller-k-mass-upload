@@ -90,7 +90,7 @@ function initRouter() {
         var newHash = location.hash.replace('#', '') || 'register';
 
         if (_lastHash === 'register' && newHash !== 'register' && _isDirty) {
-            if (!confirm('변경된 내용이 있습니다. 저장하지 않고 목록으로 탈출하시겠습니까?')) {
+            if (!confirm('변경된 내용이 있습니다. 저장하지 않고 이동하시겠습니까?')) {
                 _ignoreHashChange = true;
                 location.hash = 'register';
                 return;
@@ -114,6 +114,24 @@ function initRouter() {
     if (btnCancelEdit) {
         btnCancelEdit.addEventListener('click', function() {
             location.hash = 'products';
+        });
+    }
+
+    // "상품등록" 사이드바 메뉴 클릭 시: 같은 해시(register→register)에서도 새 상품 폼 전환
+    var registerLink = document.querySelector('.menu a[href="#register"]');
+    if (registerLink) {
+        registerLink.addEventListener('click', function(e) {
+            var currentHash = location.hash.replace('#', '') || 'register';
+            if (currentHash === 'register') {
+                e.preventDefault();
+                if (_isDirty) {
+                    if (!confirm('변경된 내용이 있습니다. 저장하지 않고 새 상품을 등록하시겠습니까?')) {
+                        return;
+                    }
+                }
+                startNewProduct();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
         });
     }
 }

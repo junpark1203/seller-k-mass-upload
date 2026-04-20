@@ -423,7 +423,7 @@ function downloadExcel() {
                 var images = p._images || { main: null, additional: [], detail: [] };
                 var addImgs = images.additional || [];
                 var detailImgs = images.detail || [];
-                var detailHtml = detailImgs.map(function(img) { return '<img src="' + (img.url || img.autoName) + '">'; }).join('');
+                var detailUrls = detailImgs.map(function(img) { return img.url || img.autoName; }).join(',');
                 var presets = Storage.getShippingPresets();
                 var sp = presets.find(function(pr) { return pr.id === p.shippingPresetId; }) || presets[0] || {};
 
@@ -474,7 +474,7 @@ function downloadExcel() {
                 // X: 추가이미지 — URL로 출력
                 var addImgUrls = addImgs.map(function(img) { return img.url || img.autoName; });
                 row[23] = addImgUrls.join(',');                    // X: 추가이미지
-                row[24] = detailHtml;                               // Y: 상세설명
+                row[24] = detailUrls;                               // Y: 상세설명
 
                 // ── 상품 주요정보 (Z~AH, cols 25~33) ──
                 row[25] = p.brand || '';                            // Z: 브랜드
@@ -546,6 +546,25 @@ function downloadExcel() {
             // Update the sheet range to include new data rows
             var lastRow = products.length + 1; // +1 because data starts at row 3 (index 2), header rows = 0,1
             ws['!ref'] = 'A1:CO' + (lastRow + 1);
+
+            // ── 행 높이 자동 조절: 셀 내 줄바꿈(\n) 수에 맞춰 높이 설정 ──
+            var rowHeights = [
+                { hpt: 30 },  // 1행: 그룹 헤더
+                { hpt: 40 }   // 2행: 컬럼 헤더
+            ];
+            for (var ri = 2; ri < lastRow + 1; ri++) {
+                var maxLines = 1;
+                for (var ci = 0; ci < 93; ci++) {
+                    var ref = XLSX.utils.encode_cell({ r: ri, c: ci });
+                    if (ws[ref] && ws[ref].v) {
+                        var val = String(ws[ref].v);
+                        var lines = val.split('\n').length;
+                        if (lines > maxLines) maxLines = lines;
+                    }
+                }
+                rowHeights.push({ hpt: Math.max(18, maxLines * 15) });
+            }
+            ws['!rows'] = rowHeights;
 
             // Write and download
             XLSX.writeFile(wb, 'smartstore_upload_' + new Date().toISOString().slice(0, 10).replace(/-/g, '') + '.xlsx');
