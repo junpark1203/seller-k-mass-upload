@@ -245,40 +245,20 @@ function goToStep(n) {
     });
 }
 
-var _startNewProductLock = false;
 function startNewProduct() {
-    // 중복 호출 방지 (500ms 이내 재호출 무시)
-    if (_startNewProductLock) {
-        console.warn('[startNewProduct] 중복 호출 차단');
-        return;
-    }
-    _startNewProductLock = true;
-    setTimeout(function() { _startNewProductLock = false; }, 500);
-
     _isDirty = false;
     currentImages = { main: null, additional: [], detail: [] };
-    
-    // generateProductCode()가 이제 Promise를 반환
-    var product = createEmptyProduct();
-    currentProduct = product;
-    
-    generateProductCode().then(function(code) {
-        currentProduct.code = code;
-        document.getElementById('fldCode').value = code;
-    }).catch(function(err) {
-        // 서버 실패 시 로컬 폴백
-        var today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-        currentProduct.code = 'KNG-' + today + '-000';
-        document.getElementById('fldCode').value = currentProduct.code;
-        console.error('[App] 관리번호 생성 실패:', err);
-    });
-    
-    populateForm();
+    currentProduct = createEmptyProduct();
+    // 관리번호는 저장 시점에 자동 생성 (API 호출 없음)
+    currentProduct.code = '';
 
-    // 강제 초기값
+    populateForm();
+    document.getElementById('fldCode').value = '저장 시 자동 생성';
+    document.getElementById('fldCode').style.color = 'var(--gray-400)';
+
     selectOrigin('0000', '상세설명에 표시');
-    
-    // Disable click-to-nav for wizard steps when creating new
+
+    // 신규 등록 시 위자드 스텝 클릭 비활성화
     document.querySelectorAll('.wizard-step').forEach(function(s) {
         s.classList.remove('clickable');
     });
@@ -415,7 +395,14 @@ function collectStepData(step) {
 // ════════════════════════════════════════
 function populateForm() {
     if (!currentProduct) return;
-    document.getElementById('fldCode').value = currentProduct.code;
+    var codeField = document.getElementById('fldCode');
+    if (currentProduct.code) {
+        codeField.value = currentProduct.code;
+        codeField.style.color = 'var(--on-surface)';
+    } else {
+        codeField.value = '저장 시 자동 생성';
+        codeField.style.color = 'var(--gray-400)';
+    }
     document.getElementById('fldStatus').value = currentProduct.productStatus || '신상품';
     document.getElementById('fldInternalName').value = currentProduct.internalName || '';
     document.getElementById('fldProductName').value = currentProduct.productName || '';

@@ -130,14 +130,26 @@ function removeDetailImage(idx) { currentImages.detail.splice(idx, 1); renderIma
 // SAVE / DRAFT
 // ════════════════════════════════════════
 function saveProduct() {
-    // 모든 스텝의 데이터를 수집 (현재 스텝만이 아닌 전체)
+    // 모든 스텝의 데이터를 수집
     [1, 2, 4, 5].forEach(function(s) { collectStepData(s); });
     if (!currentProduct.productName) { showToast('스토어 상품명을 입력하세요.', 'warning'); goToStep(1); return; }
     if (!currentProduct.categoryId) { showToast('카테고리를 선택하세요.', 'warning'); goToStep(1); return; }
     if (!currentProduct.salePrice) { showToast('판매가를 입력하세요.', 'warning'); goToStep(1); return; }
+
     currentProduct.updatedAt = new Date().toISOString();
     currentProduct._images = currentImages;
-    Storage.saveProduct(currentProduct).then(function() {
+
+    // 관리번호가 없으면 저장 시점에 자동 생성 (lazy)
+    var codePromise = currentProduct.code
+        ? Promise.resolve(currentProduct.code)
+        : generateProductCode();
+
+    codePromise.then(function(code) {
+        currentProduct.code = code;
+        document.getElementById('fldCode').value = code;
+        document.getElementById('fldCode').style.color = 'var(--on-surface)';
+        return Storage.saveProduct(currentProduct);
+    }).then(function() {
         showToast('상품이 저장되었습니다!', 'success');
         refreshProductList();
         _isDirty = false;
@@ -152,7 +164,17 @@ function saveDraft() {
     currentProduct.updatedAt = new Date().toISOString();
     currentProduct.isDraft = true;
     currentProduct._images = currentImages;
-    Storage.saveProduct(currentProduct).then(function() {
+
+    var codePromise = currentProduct.code
+        ? Promise.resolve(currentProduct.code)
+        : generateProductCode();
+
+    codePromise.then(function(code) {
+        currentProduct.code = code;
+        document.getElementById('fldCode').value = code;
+        document.getElementById('fldCode').style.color = 'var(--on-surface)';
+        return Storage.saveProduct(currentProduct);
+    }).then(function() {
         showToast('임시저장 완료!', 'info');
         refreshProductList();
         _isDirty = false;
