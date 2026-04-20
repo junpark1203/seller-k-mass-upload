@@ -245,16 +245,40 @@ function goToStep(n) {
     });
 }
 
+// ── 관리번호 lazy 생성 (Promise 캐시) ──
+var _codePromise = null;
+
+function ensureProductCode() {
+    // 이미 코드가 있으면 즉시 반환
+    if (currentProduct.code) return Promise.resolve(currentProduct.code);
+    // 이미 생성 중이면 같은 Promise 반환 (중복 API 호출 방지)
+    if (_codePromise) return _codePromise;
+    _codePromise = generateProductCode().then(function(code) {
+        currentProduct.code = code;
+        document.getElementById('fldCode').value = code;
+        document.getElementById('fldCode').style.color = 'var(--on-surface)';
+        _codePromise = null;
+        return code;
+    }).catch(function(err) {
+        _codePromise = null;
+        var today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+        var fallback = 'KNG-' + today + '-000';
+        currentProduct.code = fallback;
+        document.getElementById('fldCode').value = fallback;
+        console.error('[App] 관리번호 생성 실패, 폴백:', err);
+        return fallback;
+    });
+    return _codePromise;
+}
+
 function startNewProduct() {
     _isDirty = false;
+    _codePromise = null;  // 코드 생성 캐시 리셋
     currentImages = { main: null, additional: [], detail: [] };
     currentProduct = createEmptyProduct();
-    // 관리번호는 저장 시점에 자동 생성 (API 호출 없음)
     currentProduct.code = '';
 
     populateForm();
-    document.getElementById('fldCode').value = '저장 시 자동 생성';
-    document.getElementById('fldCode').style.color = 'var(--gray-400)';
 
     selectOrigin('0000', '상세설명에 표시');
 

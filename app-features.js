@@ -19,7 +19,9 @@ function initImageManager() {
 }
 
 function handleMainImage(file) {
-    Storage.uploadImage(file, currentProduct.code, 'main', 0).then(function(result) {
+    ensureProductCode().then(function(code) {
+        return Storage.uploadImage(file, code, 'main', 0);
+    }).then(function(result) {
         currentImages.main = { name: file.name, url: result.url, autoName: result.autoName, filename: result.filename };
         renderImagePreviews();
     }).catch(function(err) {
@@ -28,13 +30,15 @@ function handleMainImage(file) {
 }
 
 function handleAdditionalImages(files) {
-    var promises = [];
-    for (var i = 0; i < files.length && currentImages.additional.length + i < 9; i++) {
-        (function (f, idx) {
-            promises.push(Storage.uploadImage(f, currentProduct.code, 'add', currentImages.additional.length + idx));
-        })(files[i], i);
-    }
-    Promise.all(promises).then(function (imgs) {
+    ensureProductCode().then(function(code) {
+        var promises = [];
+        for (var i = 0; i < files.length && currentImages.additional.length + i < 9; i++) {
+            (function (f, idx) {
+                promises.push(Storage.uploadImage(f, code, 'add', currentImages.additional.length + idx));
+            })(files[i], i);
+        }
+        return Promise.all(promises);
+    }).then(function(imgs) {
         imgs.forEach(function(result) {
             currentImages.additional.push({ name: result.filename, url: result.url, autoName: result.autoName, filename: result.filename });
         });
@@ -45,13 +49,15 @@ function handleAdditionalImages(files) {
 }
 
 function handleDetailImages(files) {
-    var promises = [];
-    for (var i = 0; i < files.length; i++) {
-        (function (f, idx) {
-            promises.push(Storage.uploadImage(f, currentProduct.code, 'detail', currentImages.detail.length + idx));
-        })(files[i], i);
-    }
-    Promise.all(promises).then(function (imgs) {
+    ensureProductCode().then(function(code) {
+        var promises = [];
+        for (var i = 0; i < files.length; i++) {
+            (function (f, idx) {
+                promises.push(Storage.uploadImage(f, code, 'detail', currentImages.detail.length + idx));
+            })(files[i], i);
+        }
+        return Promise.all(promises);
+    }).then(function(imgs) {
         imgs.forEach(function(result) {
             currentImages.detail.push({ name: result.filename, url: result.url, autoName: result.autoName, filename: result.filename });
         });
@@ -130,7 +136,6 @@ function removeDetailImage(idx) { currentImages.detail.splice(idx, 1); renderIma
 // SAVE / DRAFT
 // ════════════════════════════════════════
 function saveProduct() {
-    // 모든 스텝의 데이터를 수집
     [1, 2, 4, 5].forEach(function(s) { collectStepData(s); });
     if (!currentProduct.productName) { showToast('스토어 상품명을 입력하세요.', 'warning'); goToStep(1); return; }
     if (!currentProduct.categoryId) { showToast('카테고리를 선택하세요.', 'warning'); goToStep(1); return; }
@@ -139,15 +144,7 @@ function saveProduct() {
     currentProduct.updatedAt = new Date().toISOString();
     currentProduct._images = currentImages;
 
-    // 관리번호가 없으면 저장 시점에 자동 생성 (lazy)
-    var codePromise = currentProduct.code
-        ? Promise.resolve(currentProduct.code)
-        : generateProductCode();
-
-    codePromise.then(function(code) {
-        currentProduct.code = code;
-        document.getElementById('fldCode').value = code;
-        document.getElementById('fldCode').style.color = 'var(--on-surface)';
+    ensureProductCode().then(function() {
         return Storage.saveProduct(currentProduct);
     }).then(function() {
         showToast('상품이 저장되었습니다!', 'success');
@@ -165,14 +162,7 @@ function saveDraft() {
     currentProduct.isDraft = true;
     currentProduct._images = currentImages;
 
-    var codePromise = currentProduct.code
-        ? Promise.resolve(currentProduct.code)
-        : generateProductCode();
-
-    codePromise.then(function(code) {
-        currentProduct.code = code;
-        document.getElementById('fldCode').value = code;
-        document.getElementById('fldCode').style.color = 'var(--on-surface)';
+    ensureProductCode().then(function() {
         return Storage.saveProduct(currentProduct);
     }).then(function() {
         showToast('임시저장 완료!', 'info');
