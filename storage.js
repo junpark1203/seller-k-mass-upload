@@ -301,7 +301,6 @@ var Storage = {
     // ════════════════════════════════════════
     uploadImage: function(file, productCode, type, index) {
         var formData = new FormData();
-        formData.append('image', file);
         var ext = file.name.split('.').pop().toLowerCase();
         var autoName;
         if (type === 'main') {
@@ -313,7 +312,10 @@ var Storage = {
         } else {
             autoName = productCode + '_img.' + ext;
         }
+        // body 필드를 먼저 append (multer가 filename 시점에 사용)
         formData.append('autoName', autoName);
+        // 파일은 마지막에 append
+        formData.append('image', file);
         return fetch(STORAGE_API + '/images/upload', {
             method: 'POST',
             body: formData

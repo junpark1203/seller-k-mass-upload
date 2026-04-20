@@ -130,7 +130,8 @@ function removeDetailImage(idx) { currentImages.detail.splice(idx, 1); renderIma
 // SAVE / DRAFT
 // ════════════════════════════════════════
 function saveProduct() {
-    collectStepData(currentStep);
+    // 모든 스텝의 데이터를 수집 (현재 스텝만이 아닌 전체)
+    [1, 2, 4, 5].forEach(function(s) { collectStepData(s); });
     if (!currentProduct.productName) { showToast('스토어 상품명을 입력하세요.', 'warning'); goToStep(1); return; }
     if (!currentProduct.categoryId) { showToast('카테고리를 선택하세요.', 'warning'); goToStep(1); return; }
     if (!currentProduct.salePrice) { showToast('판매가를 입력하세요.', 'warning'); goToStep(1); return; }
@@ -148,7 +149,7 @@ function saveProduct() {
 }
 
 function saveDraft() {
-    collectStepData(currentStep);
+    [1, 2, 4, 5].forEach(function(s) { collectStepData(s); });
     currentProduct.updatedAt = new Date().toISOString();
     currentProduct.isDraft = true;
     currentProduct._images = currentImages;
@@ -423,7 +424,7 @@ function downloadExcel() {
                 var images = p._images || { main: null, additional: [], detail: [] };
                 var addImgs = images.additional || [];
                 var detailImgs = images.detail || [];
-                var detailUrls = detailImgs.map(function(img) { return img.url || img.autoName; }).join(',');
+                var detailUrls = detailImgs.map(function(img) { return img.url || img.autoName; }).join('\n');
                 var presets = Storage.getShippingPresets();
                 var sp = presets.find(function(pr) { return pr.id === p.shippingPresetId; }) || presets[0] || {};
 
@@ -473,7 +474,7 @@ function downloadExcel() {
                 row[22] = images.main ? (images.main.url || images.main.autoName) : '';  // W: 대표이미지 (URL)
                 // X: 추가이미지 — URL로 출력
                 var addImgUrls = addImgs.map(function(img) { return img.url || img.autoName; });
-                row[23] = addImgUrls.join(',');                    // X: 추가이미지
+                row[23] = addImgUrls.join('\n');                    // X: 추가이미지
                 row[24] = detailUrls;                               // Y: 상세설명
 
                 // ── 상품 주요정보 (Z~AH, cols 25~33) ──
@@ -537,6 +538,12 @@ function downloadExcel() {
                 var optValRef = XLSX.utils.encode_cell({ r: rowIdx, c: 14 });
                 if (ws[optNameRef]) ws[optNameRef].s = { alignment: { wrapText: true, vertical: 'top' } };
                 if (ws[optValRef]) ws[optValRef].s = { alignment: { wrapText: true, vertical: 'top' } };
+
+                // 추가이미지(X, col23) / 상세설명(Y, col24) — wrapText
+                var addImgRef = XLSX.utils.encode_cell({ r: rowIdx, c: 23 });
+                var detailRef = XLSX.utils.encode_cell({ r: rowIdx, c: 24 });
+                if (ws[addImgRef]) ws[addImgRef].s = { alignment: { wrapText: true, vertical: 'top' } };
+                if (ws[detailRef]) ws[detailRef].s = { alignment: { wrapText: true, vertical: 'top' } };
 
                 // 원산지코드(AD, col29) — 텍스트 서식 강제 (앞자리 0 유지)
                 var originRef = XLSX.utils.encode_cell({ r: rowIdx, c: 29 });
