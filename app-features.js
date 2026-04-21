@@ -1556,13 +1556,11 @@ function initFooterImages() {
 
 function handleFooterImageUpload(files, type) {
     if (!files || files.length === 0) return;
-    ensureProductCode().then(function(code) {
-        var promises = [];
-        for (var i = 0; i < files.length; i++) {
-            promises.push(Storage.uploadImage(files[i], code, type, i));
-        }
-        return Promise.all(promises);
-    }).then(function(results) {
+    var promises = [];
+    for (var i = 0; i < files.length; i++) {
+        promises.push(Storage.uploadImage(files[i], 'library', type, i));
+    }
+    Promise.all(promises).then(function(results) {
         var list = type === 'notice' ? Storage.getNoticeImages() : Storage.getConsentImages();
         var idPrefix = type + '_' + Date.now() + '_';
         results.forEach(function(r, idx) {
