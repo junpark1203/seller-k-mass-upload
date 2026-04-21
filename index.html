@@ -499,7 +499,7 @@
                                         <div style="flex:1; min-width:200px; background:var(--surface-container-low); padding:12px; border-radius:8px;">
                                             <label style="font-size:12px; font-weight:600; margin-bottom:8px; display:block;">공지사항 템플릿</label>
                                             <select id="fldNoticeImageId" style="width:100%; margin-bottom:10px;" onchange="if(typeof renderFooterImagePreviews==='function') renderFooterImagePreviews()"></select>
-                                            <div id="noticeImagePreview" style="height:80px; background:var(--surface-container-high); border-radius:6px; background-size:contain; background-position:center; background-repeat:no-repeat; display:none; position:relative;">
+                                            <div id="noticeImagePreview" style="height:180px; background:var(--surface-container-high); border-radius:6px; background-size:contain; background-position:center; background-repeat:no-repeat; display:none; position:relative;">
                                                 <button type="button" id="btnClearNoticeImage" style="position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.5); color:white; border:none; border-radius:50%; width:20px; height:20px; display:flex; align-items:center; justify-content:center; cursor:pointer;" onclick="document.getElementById('fldNoticeImageId').value=''; renderFooterImagePreviews();"><i class='bx bx-x'></i></button>
                                             </div>
                                         </div>
@@ -507,7 +507,7 @@
                                         <div style="flex:1; min-width:200px; background:var(--surface-container-low); padding:12px; border-radius:8px;">
                                             <label style="font-size:12px; font-weight:600; margin-bottom:8px; display:block;">개인정보 제공동의 템플릿</label>
                                             <select id="fldConsentImageId" style="width:100%; margin-bottom:10px;" onchange="if(typeof renderFooterImagePreviews==='function') renderFooterImagePreviews()"></select>
-                                            <div id="consentImagePreview" style="height:80px; background:var(--surface-container-high); border-radius:6px; background-size:contain; background-position:center; background-repeat:no-repeat; display:none; position:relative;">
+                                            <div id="consentImagePreview" style="height:180px; background:var(--surface-container-high); border-radius:6px; background-size:contain; background-position:center; background-repeat:no-repeat; display:none; position:relative;">
                                                 <button type="button" id="btnClearConsentImage" style="position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.5); color:white; border:none; border-radius:50%; width:20px; height:20px; display:flex; align-items:center; justify-content:center; cursor:pointer;" onclick="document.getElementById('fldConsentImageId').value=''; renderFooterImagePreviews();"><i class='bx bx-x'></i></button>
                                             </div>
                                         </div>
@@ -895,7 +895,7 @@
                     <div class="wizard-section-title">
                         <i class='bx bx-images'></i> 안내 이미지 관리 (공지 / 정보제공동의)
                     </div>
-                    <p style="font-size:13px; color:var(--gray-500); margin-bottom:20px;">상품 상세페에지 하단에 일괄 적용할 공지사항이나 개인정보 동의서 이미지를 창고에 업로드하세요. <br>별점(⭐) 버튼을 눌러 기본값으로 설정해두면 상품 등록 시 자동으로 첨부됩니다.</p>
+                    <p style="font-size:13px; color:var(--gray-500); margin-bottom:20px;">상품 상세페이지 하단에 일괄 적용할 공지사항이나 개인정보 동의서 이미지를 창고에 업로드하세요. <br>별점(⭐) 버튼을 눌러 기본값으로 설정해두면 상품 등록 시 자동으로 첨부됩니다.</p>
                     
                     <div style="display:flex; gap:20px; flex-wrap:wrap;">
                         <!-- 공지사항 창고 -->
@@ -910,7 +910,7 @@
                             </div>
                         </div>
                         
-                        <!-- 구인정보 제공동의 창고 -->
+                        <!-- 개인정보 제공동의 창고 -->
                         <div style="flex:1; border:1px solid var(--border-color); border-radius:8px; padding:16px; background:var(--surface);">
                             <h3 style="font-size:14px; font-weight:700; margin-top:0; margin-bottom:12px; color:var(--on-surface);">🤝 개인정보 제공동의 창고</h3>
                             <div class="image-grid" id="consentLibGrid">

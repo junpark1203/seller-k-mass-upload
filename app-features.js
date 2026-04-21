@@ -234,7 +234,7 @@ function removeDetailImage(idx) { currentImages.detail.splice(idx, 1); renderIma
 // SAVE / DRAFT
 // ════════════════════════════════════════
 function saveProduct() {
-    [1, 2, 3, 5].forEach(function(s) { collectStepData(s); });
+    [1, 2, 3, 4, 5].forEach(function(s) { collectStepData(s); });
     if (!currentProduct.productName) { showToast('스토어 상품명을 입력하세요.', 'warning'); goToStep(1); return; }
     if (!currentProduct.categoryId) { showToast('카테고리를 선택하세요.', 'warning'); goToStep(1); return; }
     if (!currentProduct.salePrice) { showToast('판매가를 입력하세요.', 'warning'); goToStep(2); return; }
@@ -255,7 +255,7 @@ function saveProduct() {
 }
 
 function saveDraft() {
-    [1, 2, 3, 5].forEach(function(s) { collectStepData(s); });
+    [1, 2, 3, 4, 5].forEach(function(s) { collectStepData(s); });
     currentProduct.updatedAt = new Date().toISOString();
     currentProduct.isDraft = true;
     currentProduct._images = currentImages;
@@ -528,15 +528,15 @@ function downloadExcel() {
         });
 
         // ── Write product data starting at row 3 (0-indexed row 2) ──
+            var noticeImgs = Storage.getNoticeImages();
+            var consentImgs = Storage.getConsentImages();
+
             products.forEach(function(p, pIdx) {
                 var rowIdx = pIdx + 2; // row 3 = index 2 (row 1=group headers, row 2=column headers)
                 var images = p._images || { main: null, additional: [], detail: [] };
                 var addImgs = images.additional || [];
                 var detailImgs = images.detail || [];
                 var detailUrls = detailImgs.map(function(img) { var _u = img.url || img.autoName; return _u ? '<img src="' + _u + '">' : ''; }).join('');
-                
-                var noticeImgs = Storage.getNoticeImages();
-                var consentImgs = Storage.getConsentImages();
                 
                 var nImg = noticeImgs.find(function(n) { return n.id === p.noticeImageId; });
                 if (nImg && (nImg.url || nImg.autoName)) {
@@ -1562,6 +1562,7 @@ function handleFooterImageUpload(files, type) {
     }
     Promise.all(promises).then(function(results) {
         var list = type === 'notice' ? Storage.getNoticeImages() : Storage.getConsentImages();
+        var isEmpty = list.length === 0;
         var idPrefix = type + '_' + Date.now() + '_';
         results.forEach(function(r, idx) {
             list.push({
@@ -1569,7 +1570,7 @@ function handleFooterImageUpload(files, type) {
                 filename: r.filename,
                 url: r.url,
                 autoName: r.autoName,
-                isDefault: (list.length === 0 && idx === 0) // 첫 이미지면 기본값으로 자동지정
+                isDefault: (isEmpty && idx === 0) // 창고가 완전히 비어있을 때 첫 이미지만 자동 기본값
             });
         });
         if (type === 'notice') Storage.saveNoticeImages(list);
@@ -1600,30 +1601,12 @@ function _renderCategoryGallery(gridId, images, type) {
     images.forEach(function(img) {
         var card = document.createElement('div');
         card.className = 'gallery-card';
-        card.style.position = 'relative';
-        card.style.width = '120px';
-        card.style.height = '120px';
-        card.style.border = '1px solid var(--border-color)';
-        card.style.borderRadius = '6px';
         card.style.backgroundImage = 'url("' + (img.url || img.autoName) + '")';
-        card.style.backgroundSize = 'contain';
-        card.style.backgroundPosition = 'center';
-        card.style.backgroundRepeat = 'no-repeat';
-        card.style.backgroundColor = '#fff';
         
         // Star Button
         var starBtn = document.createElement('button');
+        starBtn.className = 'gallery-star-btn' + (img.isDefault ? ' active' : '');
         starBtn.innerHTML = img.isDefault ? "<i class='bx bxs-star'></i>" : "<i class='bx bx-star'></i>";
-        starBtn.style.position = 'absolute';
-        starBtn.style.top = '4px';
-        starBtn.style.left = '4px';
-        starBtn.style.background = img.isDefault ? '#fbbf24' : 'rgba(0,0,0,0.5)';
-        starBtn.style.color = 'white';
-        starBtn.style.border = 'none';
-        starBtn.style.borderRadius = '50%';
-        starBtn.style.width = '24px';
-        starBtn.style.height = '24px';
-        starBtn.style.cursor = 'pointer';
         starBtn.title = img.isDefault ? '기본값 설정됨' : '기본값으로 설정';
         starBtn.onclick = function() {
             images.forEach(function(i) { i.isDefault = false; });
@@ -1636,17 +1619,8 @@ function _renderCategoryGallery(gridId, images, type) {
         
         // Trash Button
         var trashBtn = document.createElement('button');
+        trashBtn.className = 'gallery-trash-btn';
         trashBtn.innerHTML = "<i class='bx bx-trash'></i>";
-        trashBtn.style.position = 'absolute';
-        trashBtn.style.top = '4px';
-        trashBtn.style.right = '4px';
-        trashBtn.style.background = 'var(--danger)';
-        trashBtn.style.color = 'white';
-        trashBtn.style.border = 'none';
-        trashBtn.style.borderRadius = '50%';
-        trashBtn.style.width = '24px';
-        trashBtn.style.height = '24px';
-        trashBtn.style.cursor = 'pointer';
         trashBtn.onclick = function() {
             if(confirm('이 이미지를 삭제하시겠습니까?')) {
                 var newList = images.filter(function(i) { return i.id !== img.id; });
@@ -1657,8 +1631,14 @@ function _renderCategoryGallery(gridId, images, type) {
             }
         };
         
+        // Filename label
+        var nameLabel = document.createElement('span');
+        nameLabel.className = 'gallery-card-name';
+        nameLabel.textContent = img.filename || '';
+        
         card.appendChild(starBtn);
         card.appendChild(trashBtn);
+        card.appendChild(nameLabel);
         grid.insertBefore(card, uploadBox);
     });
 }
