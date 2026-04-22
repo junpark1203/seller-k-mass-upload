@@ -145,7 +145,7 @@ function initRouter() {
 function handleRoute() {
     var hash = location.hash.replace('#', '') || 'register';
     var pages = {register:'pageRegister', products:'pageProducts', export:'pageExport', presets:'pagePresets', marginPresets:'pageMarginPresets', addresses:'pageAddresses', footerImages:'pageFooterImages'};
-    var titles = {register:'상품 등록/수정', products:'상품 목록', export:'엑셀 생성', presets:'배송 프리셋 관리', marginPresets:'마진 프리셋 관리', addresses:'주소 관리', footerImages:'안내 이미지 관리'};
+    var titles = {register:'상품 등록/수정', products:'상품 목록', export:'엑셀 생성', presets:'배송 프리셋', marginPresets:'마진 프리셋', addresses:'주소록', footerImages:'안내 이미지'};
     Object.values(pages).forEach(function(id) {
         var el = document.getElementById(id);
         if (el) el.classList.remove('active');
